@@ -1,3 +1,6 @@
+#ifndef SPELLCH_H
+#define SPELLCH_H
+
 #include <iostream>
 #include <fstream>
 #include <locale>
@@ -10,6 +13,8 @@
 #define filename "nevezetes.txt"
 #define level_of_tolerance 2
 
+using namespace std;
+
 class SpellChecker{
 
 private:
@@ -19,8 +24,8 @@ private:
         int dist_from_parent;
         std::vector<node*> children;
 
-        node() {};
-        node(std::string arg, int arg2){ word=arg; dist_from_parent=arg2; };
+        node() {}
+        node(std::string arg, int arg2){ word=arg; dist_from_parent=arg2; }
     } *root;
 
 
@@ -121,18 +126,24 @@ private:
         std::string w;
         std::ifstream in(filename, std::ifstream::in);
         
-        while(!in.eof()){
-            in>>w;
-            //cout<<w;
+        /*QFile file(filename);
 
-            if(!root){
-                root = new node(w,0);
-            }else{
-                addNode(root,w);
-            }
-        
+        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+          qDebug()<<file.errorString();
+          return;
+        }*/
+
+        while (!in.eof()) {
+          //string w = file.readLine().data();
+          in >> w;
+
+          if(!root){
+              root = new node(w,0);
+          }else{
+              addNode(root,w);
+          }
         }
-       
 
     }
 
@@ -178,3 +189,5 @@ public:
 
 
 };
+
+#endif
