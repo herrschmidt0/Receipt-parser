@@ -11,7 +11,7 @@
 
 
 #define productsDictionaryFile "termekek.txt"
-#define level_of_tolerance 2
+#define maxDistance 2
 
 using namespace std;
 
@@ -25,19 +25,20 @@ private:
         std::vector<node*> children;
 
         node() {}
-        node(std::string arg, int arg2){ word=arg; dist_from_parent=arg2; }
+        node(std::string arg, int arg2) : word(arg), dist_from_parent(arg2) {}
     } *root;
 
     struct comp{
+        SpellChecker &parent;
+        string word;
+
         comp(string arg, SpellChecker&p): word(arg), parent(p) {}
         bool operator()(string a, string b)
         {
-            return parent.LevenshteinDistance(word, a) >= parent.LevenshteinDistance(word,b) &&
-                       std::abs(word.length()-a.length()) > std::abs(word.length()-b.length());
-        }
-
-        SpellChecker &parent;
-        string word;
+            return parent.LevenshteinDistance(word, a) < parent.LevenshteinDistance(word,b) ||
+                   ( parent.LevenshteinDistance(word, a) == parent.LevenshteinDistance(word,b) &&
+                       std::abs(word.length()-a.length()) < std::abs(word.length()-b.length()) );
+        }    
     };
 
 
@@ -62,7 +63,7 @@ private:
         // initialize v0 (the previous row of distances)
         // this row is A[0][i]: edit distance for an empty s
         // the distance is just the number of characters to delete from t
-        for(int i = 0 ; i<=n ; ++i)
+        for(int i = 0 ; i<=n; ++i)
             v0[i] = i;
 
         for (int i = 0; i<=m-1; ++i)
@@ -84,7 +85,7 @@ private:
                 v1[j + 1] = std::min(v1[j] + 1, std::min(v0[j + 1] + 1, v0[j] + substitutionCost));
             }
             // copy v1 (current row) to v0 (previous row) for next iteration
-            for(int j=0;j<n+1;++j)
+            for(int j=0; j<n+1; ++j)
                 std::swap(v0[j],v1[j]);
          }
         // after the last swap, the results of v1 are now in v0
@@ -157,7 +158,7 @@ private:
 
         int dist = LevenshteinDistance(parent->word,word);
 
-        if(dist<=level_of_tolerance){
+        if(dist<=maxDistance){
             results.push_back(parent->word);
         }
 

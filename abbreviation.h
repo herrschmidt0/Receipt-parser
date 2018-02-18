@@ -25,11 +25,11 @@ public:
      */
     void resolveAbbrevs(string& input)
     {
-        int i_pos, pos = 0;
+        size_t i_pos, pos = 0;
 
         /** Szó és pont közti space-ek törlése **/
         int j;
-        for(int i=0; i< input.length(); ++i)
+        for(size_t i=0; i< input.length(); ++i)
         {
             if(input[i]=='.')
             {
@@ -40,7 +40,7 @@ public:
             }
         }
 
-        qDebug() <<QString::fromStdString(input);
+        //qDebug() <<QString::fromStdString(input);
 
         while(pos < input.length())
         {
@@ -57,13 +57,13 @@ public:
                 //qDebug() << QString::fromStdString( input.substr(i_pos, pos-i_pos) );
                 input.insert(pos+1, " ");
 
-                for(int i=0; i<dictionary.size(); ++i)
+                for(size_t i=0; i<dictionary.size(); ++i)
                 {
+                    /*qDebug()<<QString::fromStdString(dictionary[i].Short)
+                    << QString::fromStdString(input.substr(i_pos, pos-i_pos));*/
 
                    if(dictionary[i].Short == input.substr(i_pos, pos-i_pos))
                    {
-                      qDebug()<<QString::fromStdString(dictionary[i].Short)
-                             << QString::fromStdString(input.substr(i_pos, pos-i_pos));
                       input.erase(i_pos, pos-i_pos+1);
                       input.insert(i_pos, dictionary[i].Long);
                       pos = i_pos + dictionary[i].Long.length() + 1;
@@ -75,7 +75,7 @@ public:
             ++pos;
         }
 
-       qDebug() <<QString::fromStdString( input);
+       //qDebug() <<QString::fromStdString( input);
     }
 
 private:

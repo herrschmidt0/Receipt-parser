@@ -61,6 +61,7 @@ public:
 
                     product.originalLine = input[i];
 
+                    std::transform(input[i].begin(), input[i].end(), input[i].begin(), ::tolower);
                     extractProductInfo(tc_pos, input[i], product);
                     //std::cout<<"Product: "<<product<<'\n';
                     output.push_back(product);
@@ -218,9 +219,9 @@ private:
                 results.clear();
                 spellchecker.getRecommendations(word, results);
 
-                /*    qDebug()<<QString::fromStdString(word)<<':';
+                    qDebug()<<QString::fromStdString(word)<<':';
                     for(int i=0;i<results.size();++i)
-                        qDebug()<<QString::fromStdString(results[i]);*/
+                        qDebug()<<QString::fromStdString(results[i]);
 
                 if(results.size()>0){
                     oss << results[0] << " ";
@@ -253,7 +254,7 @@ private:
                 [](char c){return c!='.' && c!='-'
                         && c!='\u2014' && !isspace(c) && !std::isalnum(c);} ), line.end());
 
-            int i;
+            size_t i;
             for(i=0; i<line.size() && isspace(line[i]); ++i);
             line.erase(0,i);
             for(i=line.size()-1; i>=0 && isspace(line[i]); --i);
