@@ -11,7 +11,6 @@
 
 
 #define productsDictionaryFile "termekek.txt"
-#define maxDistance 2
 
 using namespace std;
 
@@ -41,6 +40,7 @@ private:
         }    
     };
 
+    int maxDistance;
 
     /*  Kiszámítja két szó Levenshtein távolságát,
         dinamikus programozás elveket használva.
@@ -185,12 +185,18 @@ public:
     {
         //setlocale(LC_ALL, "hu_HU.ISO88592");
   
-        /** kisbetűkké alakít minden betűt **/
+        /** Kisbetűkké alakít minden betűt **/
         std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+
+        /** A szó hosszától függően állapítja meg a maximális távolságot **/
+        if(input.length() <= 4)
+            maxDistance = 1;
+        else
+            maxDistance = 2;
 
         searchMatches(root, input, results);
 
-        /** TODO: Rendezni dist szerint novekvoen **/
+        /** Rendezi távolság szerint nővekvő sorrendbe **/
         sort(results.begin(), results.end(), comp(input, *this));
     }
 

@@ -23,8 +23,8 @@ class Parser
 public:
 
     Parser() :
-                taxcodeRight(std::regex("^.*[B,C,c][0,O]{2}$")),
-                taxcodeLeft(std::regex("^[B,C,c][0,O]{2}.*$")),
+                taxcodeRight(std::regex("^.*[A,B,C,c][0,O]{2}$")),
+                taxcodeLeft(std::regex("^[A,B,C,c][0,O]{2}.*$")),
                 productType1Confidence2(std::regex("\\w{3} .+ \\d{2,5}")),
                 productType1Confidence3(std::regex("\\w{3,4} .+ \\d{2,5}")),
                 productType2Confidence2(std::regex(".+ \\d{2,5} \\w{3,4}")),
@@ -55,6 +55,8 @@ public:
 
                 Product product;
 
+                qDebug()<<QString::fromStdString( input[i] );
+
                 int tc_pos = isProductLine(input[i], product);
 
                 if(tc_pos){
@@ -63,9 +65,8 @@ public:
 
                     std::transform(input[i].begin(), input[i].end(), input[i].begin(), ::tolower);
                     extractProductInfo(tc_pos, input[i], product);
-                    //std::cout<<"Product: "<<product<<'\n';
+
                     output.push_back(product);
-                    //possible_lines_for_sum = i+1;
                 }
 
             }
@@ -169,33 +170,89 @@ private:
         // X00 TERMEKNEV AR - formátumú
         if(tc_pos == 1){
 
-            size_t first_space_pos = line.find_first_of(' ');
+            int first_space_pos = line.find_first_of(' ');
             line = line.substr(first_space_pos+1);
-
-            size_t price_pos = line.find_last_of(' ');
-
-            //Name
-            std::string productString = line.substr(0,price_pos);
-            abrevSolver.resolveAbbrevs(productString);
-            product.name = runSpellcheckOnProduct(productString);
-
-            //Price
-            string number_str = line.substr(price_pos);
-            try{
-                product.price = std::stoi(number_str);
-            }
-            catch(std::invalid_argument& e){
-                qDebug() << "Invalid argument! at number parsing";
-            }
-
         }
         // TERMEKNEV AR X00 - formátumú
         else{
-            size_t last_space_pos = line.find_last_of(' ');
-            line = line.substr(0,last_space_pos);
-            //cout<<line<<'\n';
+
+            int last_space_pos = line.find_last_of(' ');
+            line = line.substr(0, last_space_pos);
         }
 
+        int price_pos = line.length() - 1;
+        bool space_found = false;
+
+        if(price_pos > 0)
+        {
+
+            /** Felismeri a több, mint 3 jegyű számokat,
+             * ahol esetenként a számjegyek 1 space-el vannak elválasztva **/
+            while(price_pos > 0 && (isspace(line[price_pos]) || isdigit(line[price_pos])))
+            {
+                if(isspace(line[price_pos]))
+                {
+                    if(!space_found)
+                        space_found = true;
+                    else
+                        break;
+                }
+                else
+                    space_found = false;
+
+                --price_pos;
+            }
+
+            //Terméknév
+            string productString = line.substr(0, price_pos);
+            abrevSolver.resolveAbbrevs(productString);
+            product.name = runSpellcheckOnProduct(productString);
+
+            /** Termékár
+            *  Kitörli a space-eket a stringből,
+            *  aztán stoi-val a stringet int-té konvertálja  **/
+            string number_str = line.substr(price_pos);
+            for(size_t i=0; i<number_str.length(); ++i)
+                if(isspace(number_str[i]))
+                    number_str.erase(i,1);
+            try{
+                product.price = std::stoi(number_str);
+                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_FOUND;
+            }
+            catch(std::invalid_argument& e){
+                qDebug() << "Invalid argument! at number parsing";
+                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
+            }
+        }
+        else{
+            product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
+        }
+
+
+/*
+            int price_pos = line.find_last_of(' ');
+
+            if(price_pos > 0)
+            {
+                //Name
+                std::string productString = line.substr(0,price_pos);
+                abrevSolver.resolveAbbrevs(productString);
+                product.name = runSpellcheckOnProduct(productString);
+
+                //Price
+                string number_str = line.substr(price_pos);
+                try{
+                    product.price = std::stoi(number_str);
+                    product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_FOUND;
+                }
+                catch(std::invalid_argument& e){
+                    qDebug() << "Invalid argument! at number parsing";
+                    product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
+                }
+            }
+            else{
+                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
+            }*/
 
     }
 
@@ -212,16 +269,17 @@ private:
 
         while(!ss.eof())
         {
-            ss>>word;
+            ss >> word;
 
+            /** Legalább 3 betű hosszú és nincs pont a végén (mert az rövidítés) **/
             if(word.length()>=3 && word[word.length()-1]!='.')
             {
                 results.clear();
                 spellchecker.getRecommendations(word, results);
 
-                    qDebug()<<QString::fromStdString(word)<<':';
+                   /* qDebug()<<QString::fromStdString(word)<<':';
                     for(int i=0;i<results.size();++i)
-                        qDebug()<<QString::fromStdString(results[i]);
+                        qDebug()<<QString::fromStdString(results[i]);*/
 
                 if(results.size()>0){
                     oss << results[0] << " ";
@@ -234,6 +292,8 @@ private:
             else{
                 oss << word << " ";
             }
+
+            word.clear();
         }
 
         return oss.str();

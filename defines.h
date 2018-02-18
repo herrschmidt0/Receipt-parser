@@ -14,8 +14,11 @@ struct Product
 
 #define alpha 0.60
 
-#define CONFIDENCE3 50
-#define CONFIDENCE2 75
-#define CONFIDENCE1 100
+#define CONFIDENCE3 25
+#define CONFIDENCE2 50
+#define CONFIDENCE1 75
+
+#define PRICE_CONF_FOUND 75
+#define PRICE_CONF_ERROR 25
 
 #endif // DEFINES_H

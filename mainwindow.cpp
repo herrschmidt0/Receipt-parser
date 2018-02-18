@@ -10,11 +10,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     setlocale(LC_NUMERIC, "C");
 
     api = new tesseract::TessBaseAPI();
-   // Initialize tesseract-ocr with English, without specifying tessdata path
-   if (api->Init(NULL, "eng")) {
+    // Initialize tesseract-ocr with English, without specifying tessdata path
+    if (api->Init(NULL, "eng")) {
        fprintf(stderr, "Could not initialize tesseract.\n");
        exit(1);
-   }
+    }
+    api->ReadConfigFile("note");
 
     currentId = -1;
 
@@ -47,14 +48,14 @@ void MainWindow::recomClicked(QListWidgetItem * arg)
     /** Találat részleteinek a feltöltése **/
     int id = arg->data(Qt::UserRole).toInt();
     ui->recomDetails->addItem("Cím: " + recommendations[id]["title"].toString());
-    ui->recomDetails->addItem("Szöveg: " + recommendations[id]["snippet"].toString());
+    ui->recomDetails->addItem("Leírás: \n" + recommendations[id]["snippet"].toString());
 
     /** Kép letöltése **/
     QJsonArray cse_image = recommendations[id]["pagemap"]["cse_image"].toArray();
     QJsonValue first_el = cse_image[0];
 
     QString url = first_el["src"].toString();
-    qDebug()<<url;
+    //qDebug()<<url;
 
     QNetworkAccessManager *manager = new QNetworkAccessManager(this);
     connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(imageDownloaded(QNetworkReply*)));
