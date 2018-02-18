@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>617</height>
+    <width>1172</width>
+    <height>663</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,9 +17,9 @@
    <widget class="QListWidget" name="productsList">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>651</width>
+      <x>10</x>
+      <y>40</y>
+      <width>441</width>
       <height>281</height>
      </rect>
     </property>
@@ -27,11 +27,99 @@
    <widget class="QListWidget" name="recomsList">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>310</y>
-      <width>651</width>
+      <x>10</x>
+      <y>360</y>
+      <width>441</width>
       <height>251</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="productDetails">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>40</y>
+      <width>391</width>
+      <height>281</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="productsListLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>231</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Nyugtából kiolvasott termékek:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="productDetailsLabel">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>20</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Részletek:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="recomsListLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>340</y>
+      <width>161</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Keresőmotor találatai:</string>
+    </property>
+   </widget>
+   <widget class="QListWidget" name="recomDetails">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>360</y>
+      <width>391</width>
+      <height>251</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="recomDetailsLabel">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>340</y>
+      <width>121</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Találat részletei:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="image">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>350</y>
+      <width>251</width>
+      <height>251</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Kép</string>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -40,22 +128,34 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>1172</width>
      <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
-     <string>File</string>
+     <string>Fájl</string>
     </property>
     <addaction name="actionOpen"/>
    </widget>
+   <widget class="QMenu" name="menuEszk_z_k">
+    <property name="title">
+     <string>Eszközök</string>
+    </property>
+    <addaction name="actionSearchOnline"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEszk_z_k"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <action name="actionOpen">
    <property name="text">
-    <string>Open</string>
+    <string>Nyugta megnyitása</string>
+   </property>
+  </action>
+  <action name="actionSearchOnline">
+   <property name="text">
+    <string>Keresés online</string>
    </property>
   </action>
  </widget>

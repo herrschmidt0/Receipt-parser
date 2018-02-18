@@ -11,60 +11,96 @@
 #include <QRegExp>
 
 #include "spellcheck.h"
+#include "abbreviation.h"
+#include "defines.h"
+
 
 using namespace std;
 
 class Parser
 {
 
-private:
+public:
 
-    vector<string> products;
+    Parser() :
+                taxcodeRight(std::regex("^.*[B,C,c][0,O]{2}$")),
+                taxcodeLeft(std::regex("^[B,C,c][0,O]{2}.*$")),
+                productType1Confidence2(std::regex("\\w{3} .+ \\d{2,5}")),
+                productType1Confidence3(std::regex("\\w{3,4} .+ \\d{2,5}")),
+                productType2Confidence2(std::regex(".+ \\d{2,5} \\w{3,4}")),
+                productType2Confidence3(std::regex(".+ \\d{2,5} \\w{3}")),
+                abrevSolver()
+    { }
 
-    void readInput(vector<string>&input){
+    void executeParser(vector<string> &input, vector<Product> &output)
+    {
 
-        //QString path = QCoreApplication::applicationFilePath();
-        //path.append("/in.txt");
-       /* QFile file("in.txt");
-
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-          qDebug()<<file.errorString();
-          return;
+        //Mindenféle jelek, nem alfanumerikus karekterek törlése a szövegből
+        for(size_t i=0; i<input.size(); ++i){
+            removeUnnecessaryCharacters(input[i]);
         }
+        /*
+        size_t line_nr = 1;
+        size_t possible_lines_for_sum;
 
-        while (!file.atEnd()) {
-          string line = file.readLine().data();
-          input.push_back(line);
+        while(line_nr < input.size() && !isListDelimiter(input[line_nr-1])){
+            cout<<input[line_nr-1]<<'\n';
+            ++line_nr;
         }*/
 
-        ifstream ifs("in.txt", std::ifstream::in);
 
-        string s;
+        for(size_t i=0;i<input.size();++i){
 
-        while(!ifs.eof()){
-            std::getline(ifs, s);
-            input.push_back(s);
-        }
-    }
+            if(input[i].length()>3){
 
+                Product product;
 
-    bool isListDelimiter(string line){
+                int tc_pos = isProductLine(input[i], product);
 
-        stringstream ss(line);
+                if(tc_pos){
 
-        string word;
+                    product.originalLine = input[i];
 
-        while(!ss.eof()){
-            ss>>word;
-            if(word == "NYUGTA"){
-                return true;
+                    extractProductInfo(tc_pos, input[i], product);
+                    //std::cout<<"Product: "<<product<<'\n';
+                    output.push_back(product);
+                    //possible_lines_for_sum = i+1;
+                }
+
             }
         }
 
-        return false;
+        for(size_t i=0; i<input.size();++i){
+            searchLineForSum(input[i]);
+        }
+
+
+        /*
+        //Spell Checker próba
+        std::vector<string> res;
+
+        SpellChecker sc;
+
+        sc.getRecommendations("isszesen",res);
+
+        for(unsigned int i=0;i<res.size();++i){
+            cout<<res[i]<<'\n';
+        }
+        cout<<"Size: "<<res.size();
+        */
     }
 
+private:
+
+     std::regex taxcodeRight,
+                taxcodeLeft,
+                productType1Confidence2,
+                productType1Confidence3,
+                productType2Confidence2,
+                productType2Confidence3;
+
+     SpellChecker spellchecker;
+     Abbreviation abrevSolver;
 
     /*
         Felismeri, hogy egy adott sor tartalmaz-e termék-ár párt,
@@ -73,43 +109,52 @@ private:
         1 - terméksor, ÁFA kód bal oldalon
         2 - terméksor, ÁFA kód jobb oldalon
     */
-    int isProductLine(string line){
-
-
-        std::regex product_line_regex1("\\w{3} .+ \\d+"),
-                   product_line_regex2(".+ \\d+ \\w{3}");
+    int isProductLine(string line, Product& product){
 
         std::smatch match;
 
+        /** Egyre szigorúbb minták illesztése (1. típus) **/
+        if(std::regex_match(line,match,productType1Confidence3)){
 
-        if(std::regex_match(line,match,product_line_regex1)){
-            //qDebug()<<"Product line, with tax code on left.\n";
+            product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE3;
+
+            if(std::regex_match(line,match,productType1Confidence2)){
+                product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE2;
+
+                if(std::regex_match(line,match,taxcodeLeft)){
+                   product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE1;
+                }
+            }
+
             return 1;
         }
 
-        if(std::regex_match(line,match,product_line_regex2)){
-            //qDebug()<<"Product line, with tax code on right.\n";
+         /** Egyre szigorúbb minták illesztése (2. típus) **/
+        if(std::regex_match(line,match,productType2Confidence3)){
+
+            product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE3;
+
+            if(std::regex_match(line,match,productType2Confidence2)){
+                product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE2;
+
+                if(std::regex_match(line,match,taxcodeRight)){
+                   product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE1;
+                }
+            }
+
             return 2;
         }
 
-
-        /*
-        QRegExp product_line_regex1("\\w{3} .+ \\d+"),
-                product_line_regex2(".+ \\d+ \\w{3}");
-
-        if(product_line_regex1.exactMatch(QString::fromStdString(line)))
-        {
-            qDebug()<<"Product line, with tax code on left.\n";
-            return 1;
+        /** Csak az áfa kód talál **/
+        if(std::regex_match(line,match,taxcodeLeft)){
+           product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE2;
+           return 1;
         }
 
-        if(product_line_regex2.exactMatch(QString::fromStdString(line)))
-        {
-            qDebug()<<"Product line, with tax code on right.\n";
-            return 2;
+        if(std::regex_match(line,match,taxcodeRight)){
+           product.confidence = alpha*product.confidence + (1-alpha)*CONFIDENCE1;
+           return 2;
         }
-
-        qDebug()<<product_line_regex1.matchedLength();*/
 
         return 0;
     }
@@ -118,35 +163,108 @@ private:
     /*
         Kinyeri egy terméksorból a termék nevét és árát.
     */
-    void extractProductInfo(int tc_pos, string line, string &product){
+    void extractProductInfo(int tc_pos, string line, Product &product){
 
         // X00 TERMEKNEV AR - formátumú
         if(tc_pos == 1){
 
             size_t first_space_pos = line.find_first_of(' ');
-            line = line.substr(first_space_pos);
+            line = line.substr(first_space_pos+1);
 
             size_t price_pos = line.find_last_of(' ');
 
-            //qDebug()<<"Product: "<<QString::fromStdString(line.substr(0,price_pos))<<' ';
-            product = line.substr(0,price_pos);
+            //Name
+            std::string productString = line.substr(0,price_pos);
+            abrevSolver.resolveAbbrevs(productString);
+            product.name = runSpellcheckOnProduct(productString);
 
+            //Price
             string number_str = line.substr(price_pos);
-            int price = std::stoi(number_str);
+            try{
+                product.price = std::stoi(number_str);
+            }
+            catch(std::invalid_argument& e){
+                qDebug() << "Invalid argument! at number parsing";
+            }
 
-            //cout<<"Price: "<<price<<'\n';
         }
         // TERMEKNEV AR X00 - formátumú
         else{
             size_t last_space_pos = line.find_last_of(' ');
             line = line.substr(0,last_space_pos);
-            cout<<line<<'\n';
+            //cout<<line<<'\n';
         }
 
 
     }
 
-    /* 	Olyan sort keres, amely tartalmazza az "összesen" szót,
+    /*
+     * Spellchecker futtatása az adott terméksoron, megpróbál minden szót kijavítani
+     */
+    string runSpellcheckOnProduct(string input)
+    {
+        stringstream ss(input);
+        string word;
+        ostringstream oss;
+
+        vector<string> results;
+
+        while(!ss.eof())
+        {
+            ss>>word;
+
+            if(word.length()>=3 && word[word.length()-1]!='.')
+            {
+                results.clear();
+                spellchecker.getRecommendations(word, results);
+
+                /*    qDebug()<<QString::fromStdString(word)<<':';
+                    for(int i=0;i<results.size();++i)
+                        qDebug()<<QString::fromStdString(results[i]);*/
+
+                if(results.size()>0){
+                    oss << results[0] << " ";
+                }
+                else{
+                    oss << word << " ";
+                }
+
+            }
+            else{
+                oss << word << " ";
+            }
+        }
+
+        return oss.str();
+    }
+
+
+    /*
+     * Mindenféle jelek, nem alfanumerikus karekterek,
+     * valamint sor eleji/végi szóközök törlése
+    */
+    void removeUnnecessaryCharacters(string& line)
+    {
+        //std::cout<<line<<'\n';
+
+        if(line.size()>0)
+        {
+            line.erase(std::remove_if(line.begin(), line.end(),
+                [](char c){return c!='.' && c!='-'
+                        && c!='\u2014' && !isspace(c) && !std::isalnum(c);} ), line.end());
+
+            int i;
+            for(i=0; i<line.size() && isspace(line[i]); ++i);
+            line.erase(0,i);
+            for(i=line.size()-1; i>=0 && isspace(line[i]); --i);
+            line.erase(i+1);
+        }
+
+        //std::cout<<line<<'\n';
+    }
+
+
+    /* 	Olyan sort keres, amely tartalmazza az "összesen"/"bankkártya" szót,
         ugyanakkor tartalmaz egy X ft szerű kifejezést.
     */
     void searchLineForSum(string line){
@@ -155,7 +273,6 @@ private:
         stringstream ss(line);
         string word;
         vector<string> recoms;
-        SpellChecker sc;
 
         bool sum_found = false;
 
@@ -163,15 +280,12 @@ private:
 
             ss>>word;
 
-            //Mindenféle jelek, nem alfanumerikus karekterek törlése a szóból
-            word.erase(std::remove_if(word.begin(), word.end(), [](char c){return !bool(std::isalpha(c));} ), word.end());
-
             if(word.length()>3){
 
                 //cout<<word<<' '<<word.length()<<'\n';
                 //Az adott szó spellcheckelése
                 recoms.clear();
-                sc.getRecommendations(word,recoms);
+                spellchecker.getRecommendations(word,recoms);
 
                 //Javaslatok között az "összesen" keresése
                 for(size_t i = 0;i<recoms.size();++i){
@@ -212,62 +326,22 @@ private:
     }
 
 
-public:
-    void executeParser(vector<string> &pr)
-    {
-        std::vector<string> input;
+    bool isListDelimiter(string line){
 
-        readInput(input);
-        ///////////////////
+        stringstream ss(line);
 
-        size_t line_nr = 1;
-        size_t possible_lines_for_sum;
+        string word;
 
-        //std::cout<<"Üzlet(lánc) címe: \n\n";
-
-        while(!isListDelimiter(input[line_nr-1])){
-
-            cout<<input[line_nr-1]<<'\n';
-            ++line_nr;
-        }
-
-        string product;
-
-        for(size_t i=line_nr;i<input.size();++i){
-
-            if(input[i].length()>3){
-
-                int tc_pos = isProductLine(input[i]);
-
-                if(tc_pos){
-
-                    extractProductInfo(tc_pos, input[i], product);
-                    pr.push_back(product);
-                    possible_lines_for_sum = i+1;
-                }
-
+        while(!ss.eof()){
+            ss>>word;
+            if(word == "NYUGTA"){
+                return true;
             }
         }
 
-        for(size_t i=line_nr; i<input.size();++i){
-
-            searchLineForSum(input[i]);
-        }
-
-
-        /*
-        //Spell Checker próba
-        std::vector<string> res;
-
-        SpellChecker sc;
-
-        sc.getRecommendations("isszesen",res);
-
-        for(unsigned int i=0;i<res.size();++i){
-            cout<<res[i]<<'\n';
-        }
-        cout<<"Size: "<<res.size();
-        */
+        return false;
     }
+
+
 };
 #endif

@@ -28,7 +28,10 @@ SOURCES += main.cpp\
 
 HEADERS  += mainwindow.h \
     spellcheck.h \
-    parser.h
+    parser.h \
+    defines.h \
+    abbreviation.h \
+    searchdialog.h
 
 FORMS    += mainwindow.ui
 CONFIG += c++11

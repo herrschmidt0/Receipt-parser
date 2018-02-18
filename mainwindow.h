@@ -2,6 +2,8 @@
 #define MAINWINDOW_H
 
 #include <string>
+#include <sstream>
+
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -16,7 +18,9 @@
 
 #include <tesseract/baseapi.h>
 #include <leptonica/allheaders.h>
+
 #include "parser.h"
+#include "searchdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -33,16 +37,28 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    tesseract::TessBaseAPI *api;
+
     Parser parser;
 
-    vector<string> products;
+    vector<string> parserInput;
+    vector<Product> parserOutput;
+    vector<QJsonValue> recommendations;
+
+    int currentId;
 
 private slots:
     void replyFinished(QNetworkReply*);
+    void imageDownloaded(QNetworkReply*);
 
     void on_actionOpen_triggered();
+    void on_actionSearchOnline_triggered();
 
     void productClicked(QListWidgetItem*);
+    void recomClicked(QListWidgetItem*);
+
+ public slots:
+    void onExecuteSearch(QString query);
 };
 
 #endif // MAINWINDOW_H

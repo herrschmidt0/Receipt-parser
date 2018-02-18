@@ -10,7 +10,7 @@
 #include <algorithm>
 
 
-#define filename "nevezetes.txt"
+#define productsDictionaryFile "termekek.txt"
 #define level_of_tolerance 2
 
 using namespace std;
@@ -28,9 +28,21 @@ private:
         node(std::string arg, int arg2){ word=arg; dist_from_parent=arg2; }
     } *root;
 
+    struct comp{
+        comp(string arg, SpellChecker&p): word(arg), parent(p) {}
+        bool operator()(string a, string b)
+        {
+            return parent.LevenshteinDistance(word, a) >= parent.LevenshteinDistance(word,b) &&
+                       std::abs(word.length()-a.length()) > std::abs(word.length()-b.length());
+        }
+
+        SpellChecker &parent;
+        string word;
+    };
+
 
     /*  Kiszámítja két szó Levenshtein távolságát,
-		dinamikus programozási elveket használva.
+        dinamikus programozás elveket használva.
 	*/
     int LevenshteinDistance(std::string ps, std::string pt)
     {
@@ -124,25 +136,17 @@ private:
     void createBKtree()
     {
         std::string w;
-        std::ifstream in(filename, std::ifstream::in);
+        std::ifstream in(productsDictionaryFile, std::ifstream::in);
         
-        /*QFile file(filename);
-
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        {
-          qDebug()<<file.errorString();
-          return;
-        }*/
-
         while (!in.eof()) {
-          //string w = file.readLine().data();
+
           in >> w;
 
-          if(!root){
+          if(!root)
               root = new node(w,0);
-          }else{
+          else
               addNode(root,w);
-          }
+
         }
 
     }
@@ -164,6 +168,8 @@ private:
         }
     }
 
+
+
 public:
 
     SpellChecker() : root(nullptr) {
@@ -178,9 +184,13 @@ public:
     {
         //setlocale(LC_ALL, "hu_HU.ISO88592");
   
+        /** kisbetűkké alakít minden betűt **/
         std::transform(input.begin(), input.end(), input.begin(), ::tolower);
 
         searchMatches(root, input, results);
+
+        /** TODO: Rendezni dist szerint novekvoen **/
+        sort(results.begin(), results.end(), comp(input, *this));
     }
 
     ~SpellChecker(){
