@@ -23,8 +23,8 @@ class Parser
 public:
 
     Parser() :
-                taxcodeRight(std::regex("^.*[A,B,C,c][0,O]{2}$")),
-                taxcodeLeft(std::regex("^[A,B,C,c][0,O]{2}.*$")),
+                taxcodeRight(std::regex("^.+[ABCc][0O]{2}$")),
+                taxcodeLeft(std::regex("^[ABCc][0O]{2}.+$")),
                 productType1Confidence2(std::regex("\\w{3} .+ \\d{2,5}")),
                 productType1Confidence3(std::regex("\\w{3,4} .+ \\d{2,5}")),
                 productType2Confidence2(std::regex(".+ \\d{2,5} \\w{3,4}")),

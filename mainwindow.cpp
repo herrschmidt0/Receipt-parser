@@ -130,21 +130,21 @@ void MainWindow::on_actionOpen_triggered()
             while(std::getline(ss,line,'\n')){
                 parserInput.push_back(line);
              }
-        }
 
-        //Parser futtatása
-        parserOutput.clear();
-        parser.executeParser(parserInput, parserOutput);
+            //Parser futtatása
+            parserOutput.clear();
+            parser.executeParser(parserInput, parserOutput);
 
-        //Ablak feltöltése az eredménnyel
-        ui->productsList->clear();
-        ui->productDetails->clear();
-        for(int i=0; i<parserOutput.size(); ++i)
-        {
-            QListWidgetItem *item = new QListWidgetItem();
-            item->setText(QString::fromStdString(parserOutput[i].name));
-            item->setData(Qt::UserRole, QVariant(i));
-            ui->productsList->addItem(item);
+            //Ablak feltöltése az eredménnyel
+            ui->productsList->clear();
+            ui->productDetails->clear();
+            for(int i=0; i<parserOutput.size(); ++i)
+            {
+                QListWidgetItem *item = new QListWidgetItem();
+                item->setText(QString::fromStdString(parserOutput[i].name));
+                item->setData(Qt::UserRole, QVariant(i));
+                ui->productsList->addItem(item);
+            }
         }
     }
 }

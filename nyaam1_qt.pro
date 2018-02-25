@@ -40,8 +40,8 @@ CONFIG += c++11
 DISTFILES += \
     nevezetes.txt \
     in.txt
-
 unix|win32: LIBS += /usr/local/lib/libtesseract.so.4.0.0 \
     /usr/local/lib/liblept.so
+
 
 
