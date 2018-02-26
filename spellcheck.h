@@ -20,11 +20,11 @@ private:
 
     struct node{
         std::string word;
-        int dist_from_parent;
+        int distFromParent;
         std::vector<node*> children;
 
         node() {}
-        node(std::string arg, int arg2) : word(arg), dist_from_parent(arg2) {}
+        node(std::string arg, int arg2) : word(arg), distFromParent(arg2) {}
     } *root;
 
     struct comp{
@@ -113,7 +113,7 @@ private:
             node* conflicted_node;
 
             for(node * n : parent->children){
-                if(n->dist_from_parent == dist){
+                if(n->distFromParent == dist){
                     conflict = true;
                     conflicted_node = n;
                     break;
@@ -163,7 +163,7 @@ private:
         }
 
         for(node*n : parent->children){
-            if(dist-1 <= n->dist_from_parent && n->dist_from_parent <= dist+1){
+            if(dist-1 <= n->distFromParent && n->distFromParent <= dist+1){
                 searchMatches(n,word,results);
             }
         }

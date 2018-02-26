@@ -8,7 +8,6 @@
 #include <string>
 #include <regex>
 #include <cctype>
-#include <QRegExp>
 
 #include "spellcheck.h"
 #include "abbreviation.h"

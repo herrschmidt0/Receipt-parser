@@ -23,84 +23,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     connect(ui->recomsList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(recomClicked(QListWidgetItem*)));
 }
 
-/* Terméksor egy elemére kattintottak */
-void MainWindow::productClicked(QListWidgetItem * arg)
-{
-    /** Termék részleteinek megjelenítése **/
-    ui->productDetails->clear();
 
-    int id = arg->data(Qt::UserRole).toInt();
-    ui->productDetails->addItem("Javított név: " + QString::fromStdString(parserOutput[id].name));
-    ui->productDetails->addItem("Ár: " + QString::number(parserOutput[id].price) + " Ft");
-    ui->productDetails->addItem("Konfidencia szint: " + QString::number(parserOutput[id].confidence) + "%");
-    ui->productDetails->addItem("Eredeti terméksor: " + QString::fromStdString(parserOutput[id].originalLine));
-
-    /** A keresési ablak mezőjébe be fog másolódni a kiválasztott termék neve **/
-    currentId = id;
-}
-
-
-/* Online találatok egy elemére kattintottak */
-void MainWindow::recomClicked(QListWidgetItem * arg)
-{
-    ui->recomDetails->clear();
-
-    /** Találat részleteinek a feltöltése **/
-    int id = arg->data(Qt::UserRole).toInt();
-    ui->recomDetails->addItem("Cím: " + recommendations[id]["title"].toString());
-    ui->recomDetails->addItem("Leírás: \n" + recommendations[id]["snippet"].toString());
-
-    /** Kép letöltése **/
-    QJsonArray cse_image = recommendations[id]["pagemap"]["cse_image"].toArray();
-    QJsonValue first_el = cse_image[0];
-
-    QString url = first_el["src"].toString();
-    //qDebug()<<url;
-
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(imageDownloaded(QNetworkReply*)));
-
-    QNetworkRequest request;
-    QSslConfiguration config = QSslConfiguration::defaultConfiguration();
-    config.setProtocol(QSsl::TlsV1_2);
-    request.setSslConfiguration(config);
-    request.setUrl(QUrl(url));
-    request.setHeader(QNetworkRequest::ServerHeader, "application/json");
-
-    manager->get(request);
-}
-
-/* Kép letöltése kész */
-void MainWindow::imageDownloaded(QNetworkReply *reply)
-{
-    QByteArray jpegData = reply->readAll();
-
-    QPixmap pixmap;
-    pixmap.loadFromData(jpegData);
-    ui->image->setPixmap(pixmap);
-}
-
-/* Hálózati response kezelése, javaslat lista feltöltése */
-void MainWindow::replyFinished(QNetworkReply *reply)
-{
-    QByteArray data = reply->readAll();
-    //qDebug() << "Response: " <<data;
-    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
-
-    QJsonValue itemsVal = jsonDoc["items"];
-    QJsonArray items = itemsVal.toArray();
-
-    for(int i=0; i<items.count(); ++i)  //const QJsonValue & v, items)
-    {
-        QListWidgetItem * item = new QListWidgetItem();
-        QJsonValue v = items[i];
-        item->setText(v["title"].toString());
-        item->setData(Qt::UserRole, QVariant(i));
-        ui->recomsList->addItem(item);
-
-        recommendations.push_back(items[i]);
-    }
-}
 
 /* Fájl megnyitása gombra kattintottak */
 void MainWindow::on_actionOpen_triggered()
@@ -149,6 +72,22 @@ void MainWindow::on_actionOpen_triggered()
     }
 }
 
+/* Terméksor egy elemére kattintottak */
+void MainWindow::productClicked(QListWidgetItem * arg)
+{
+    /** Termék részleteinek megjelenítése **/
+    ui->productDetails->clear();
+
+    int id = arg->data(Qt::UserRole).toInt();
+    ui->productDetails->addItem("Javított név: " + QString::fromStdString(parserOutput[id].name));
+    ui->productDetails->addItem("Ár: " + QString::number(parserOutput[id].price) + " Ft");
+    ui->productDetails->addItem("Konfidencia szint: " + QString::number(parserOutput[id].confidence) + "%");
+    ui->productDetails->addItem("Eredeti terméksor: " + QString::fromStdString(parserOutput[id].originalLine));
+
+    /** A keresési ablak mezőjébe be fog másolódni a kiválasztott termék neve **/
+    currentId = id;
+}
+
 /* Megnyitották az online keresés ablakot */
 void MainWindow::on_actionSearchOnline_triggered()
 {
@@ -185,6 +124,67 @@ void MainWindow::onExecuteSearch(QString query)
     recommendations.clear();
 }
 
+/* Hálózati response kezelése, javaslat lista feltöltése */
+void MainWindow::replyFinished(QNetworkReply *reply)
+{
+    QByteArray data = reply->readAll();
+    //qDebug() << "Response: " <<data;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
+
+    QJsonValue itemsVal = jsonDoc["items"];
+    QJsonArray items = itemsVal.toArray();
+
+    for(int i=0; i<items.count(); ++i)  //const QJsonValue & v, items)
+    {
+        QListWidgetItem * item = new QListWidgetItem();
+        QJsonValue v = items[i];
+        item->setText(v["title"].toString());
+        item->setData(Qt::UserRole, QVariant(i));
+        ui->recomsList->addItem(item);
+
+        recommendations.push_back(items[i]);
+    }
+}
+
+/* Online találatok egy elemére kattintottak */
+void MainWindow::recomClicked(QListWidgetItem * arg)
+{
+    ui->recomDetails->clear();
+
+    /** Találat részleteinek a feltöltése **/
+    int id = arg->data(Qt::UserRole).toInt();
+    ui->recomDetails->addItem("Cím: " + recommendations[id]["title"].toString());
+    ui->recomDetails->addItem("Leírás: \n" + recommendations[id]["snippet"].toString());
+
+    /** Kép letöltése **/
+    QJsonArray cse_image = recommendations[id]["pagemap"]["cse_image"].toArray();
+    QJsonValue first_el = cse_image[0];
+
+    QString url = first_el["src"].toString();
+    //qDebug()<<url;
+
+    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(imageDownloaded(QNetworkReply*)));
+
+    QNetworkRequest request;
+    QSslConfiguration config = QSslConfiguration::defaultConfiguration();
+    config.setProtocol(QSsl::TlsV1_2);
+    request.setSslConfiguration(config);
+    request.setUrl(QUrl(url));
+    request.setHeader(QNetworkRequest::ServerHeader, "application/json");
+
+    manager->get(request);
+}
+
+/* Kép letöltése kész */
+void MainWindow::imageDownloaded(QNetworkReply *reply)
+{
+    QByteArray jpegData = reply->readAll();
+
+    QPixmap pixmap;
+    pixmap.loadFromData(jpegData);
+    ui->image->setPixmap(pixmap);
+}
 
 MainWindow::~MainWindow()
 {
