@@ -83,6 +83,11 @@ void MainWindow::productClicked(QListWidgetItem * arg)
     ui->productDetails->addItem("Ár: " + QString::number(parserOutput[id].price) + " Ft");
     ui->productDetails->addItem("Konfidencia szint: " + QString::number(parserOutput[id].confidence) + "%");
     ui->productDetails->addItem("Eredeti terméksor: " + QString::fromStdString(parserOutput[id].originalLine));
+    for(size_t i=0; i<parserOutput[id].abrevs.size(); ++i)
+    {
+        ui->productDetails->addItem("Javaslat " + QString::fromStdString(parserOutput[id].abrevs[i].Short)
+                                    + "-ra: " + QString::fromStdString(parserOutput[id].abrevs[i].Long));
+    }
 
     /** A keresési ablak mezőjébe be fog másolódni a kiválasztott termék neve **/
     currentId = id;
@@ -156,24 +161,27 @@ void MainWindow::recomClicked(QListWidgetItem * arg)
     ui->recomDetails->addItem("Cím: " + recommendations[id]["title"].toString());
     ui->recomDetails->addItem("Leírás: \n" + recommendations[id]["snippet"].toString());
 
-    /** Kép letöltése **/
+    /** Kép letöltése, ha van hozzá url **/
     QJsonArray cse_image = recommendations[id]["pagemap"]["cse_image"].toArray();
     QJsonValue first_el = cse_image[0];
 
     QString url = first_el["src"].toString();
-    //qDebug()<<url;
+    qDebug()<<url;
 
-    QNetworkAccessManager *manager = new QNetworkAccessManager(this);
-    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(imageDownloaded(QNetworkReply*)));
+    if(!url.isEmpty())
+    {
+        QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+        connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(imageDownloaded(QNetworkReply*)));
 
-    QNetworkRequest request;
-    QSslConfiguration config = QSslConfiguration::defaultConfiguration();
-    config.setProtocol(QSsl::TlsV1_2);
-    request.setSslConfiguration(config);
-    request.setUrl(QUrl(url));
-    request.setHeader(QNetworkRequest::ServerHeader, "application/json");
+        QNetworkRequest request;
+        QSslConfiguration config = QSslConfiguration::defaultConfiguration();
+        config.setProtocol(QSsl::TlsV1_2);
+        request.setSslConfiguration(config);
+        request.setUrl(QUrl(url));
+        request.setHeader(QNetworkRequest::ServerHeader, "application/json");
 
-    manager->get(request);
+        manager->get(request);
+    }
 }
 
 /* Kép letöltése kész */

@@ -204,7 +204,7 @@ private:
 
             //Terméknév
             string productString = line.substr(0, price_pos);
-            abrevSolver.resolveAbbrevs(productString);
+            abrevSolver.resolveAbbrevs(productString, product);
             product.name = runSpellcheckOnProduct(productString);
 
             /** Termékár

@@ -1,6 +1,18 @@
 #ifndef DEFINES_H
 #define DEFINES_H
 
+using namespace std;
+
+struct DictElem
+{
+    string Short;
+    string Long;
+
+    DictElem() = default;
+    DictElem(string s, string l) : Short(s), Long(l) {}
+};
+
+
 struct Product
 {
     string name;
@@ -8,6 +20,7 @@ struct Product
 
     string originalLine;
     int confidence;
+    vector<DictElem> abrevs;
 
     Product() : price(0), confidence(50) {}
 };

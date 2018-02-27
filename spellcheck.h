@@ -23,7 +23,7 @@ private:
         int distFromParent;
         std::vector<node*> children;
 
-        node() {}
+        node() = default;
         node(std::string arg, int arg2) : word(arg), distFromParent(arg2) {}
     } *root;
 
