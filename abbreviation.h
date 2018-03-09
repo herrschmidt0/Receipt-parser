@@ -108,9 +108,9 @@ public:
                     QByteArray data = netReply->readAll();
                     QJsonDocument jsonDoc = QJsonDocument::fromJson(data);
                     QJsonArray results = jsonDoc[1].toArray();
-                    qDebug() << "Response: " << results;
+                    //qDebug() << "Response: " << results;
 
-                    for(size_t i=0; i<results.count(); ++i)
+                    for(int i=0; i<results.count(); ++i)
                     {
                         DictElem e(input.substr(i_pos, pos-i_pos), results[i].toString().toStdString());
                         product.abrevs.push_back(e);
@@ -130,13 +130,6 @@ private:
 
     std::vector<DictElem> dictionary;
 
-/*private slots:
-    void replyFinished(QNetworkReply *reply)
-    {
-        QByteArray data = reply->readAll();
-        qDebug() << "Response: " <<data;
-    }
-*/
 };
 
 #endif // ABBREVIATION_H

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1172</width>
-    <height>663</height>
+    <height>735</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -20,7 +20,7 @@
       <x>10</x>
       <y>40</y>
       <width>441</width>
-      <height>281</height>
+      <height>351</height>
      </rect>
     </property>
    </widget>
@@ -28,9 +28,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>360</y>
+      <y>430</y>
       <width>441</width>
-      <height>251</height>
+      <height>261</height>
      </rect>
     </property>
    </widget>
@@ -40,7 +40,7 @@
       <x>460</x>
       <y>40</y>
       <width>391</width>
-      <height>281</height>
+      <height>351</height>
      </rect>
     </property>
    </widget>
@@ -74,7 +74,7 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>340</y>
+      <y>410</y>
       <width>161</width>
       <height>17</height>
      </rect>
@@ -87,9 +87,9 @@
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>360</y>
+      <y>430</y>
       <width>391</width>
-      <height>251</height>
+      <height>261</height>
      </rect>
     </property>
    </widget>
@@ -97,7 +97,7 @@
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>340</y>
+      <y>410</y>
       <width>121</width>
       <height>17</height>
      </rect>
@@ -109,14 +109,30 @@
    <widget class="QLabel" name="image">
     <property name="geometry">
      <rect>
-      <x>890</x>
-      <y>350</y>
-      <width>251</width>
-      <height>251</height>
+      <x>880</x>
+      <y>430</y>
+      <width>271</width>
+      <height>261</height>
      </rect>
     </property>
     <property name="text">
-     <string>Kép</string>
+     <string>Termékkép</string>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="note">
+    <property name="geometry">
+     <rect>
+      <x>880</x>
+      <y>40</y>
+      <width>271</width>
+      <height>351</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Nyugtakép</string>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -137,12 +153,21 @@
      <string>Fájl</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEszk_z_k">
     <property name="title">
      <string>Eszközök</string>
     </property>
     <addaction name="actionSearchOnline"/>
+    <addaction name="separator"/>
+    <addaction name="actionSaveParsed"/>
+    <addaction name="actionSaveOnlineResult"/>
+    <addaction name="actionSaveAllOnlineResults"/>
+    <addaction name="actionSaveImage"/>
+    <addaction name="separator"/>
+    <addaction name="actionEditDict"/>
+    <addaction name="actionAddToDictionary"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEszk_z_k"/>
@@ -159,6 +184,41 @@
    </property>
    <property name="text">
     <string>Keresés online</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Kilépés</string>
+   </property>
+  </action>
+  <action name="actionSaveParsed">
+   <property name="text">
+    <string>Parszolás mentése</string>
+   </property>
+  </action>
+  <action name="actionSaveOnlineResult">
+   <property name="text">
+    <string>Online keresés mentése (kijelölt sor)</string>
+   </property>
+  </action>
+  <action name="actionSaveImage">
+   <property name="text">
+    <string>Kép mentése</string>
+   </property>
+  </action>
+  <action name="actionEditDict">
+   <property name="text">
+    <string>Szótár szerkesztése</string>
+   </property>
+  </action>
+  <action name="actionSaveAllOnlineResults">
+   <property name="text">
+    <string>Online keresés mentése (minden sor)</string>
+   </property>
+  </action>
+  <action name="actionAddToDictionary">
+   <property name="text">
+    <string>Ez a javaslat helyes! Hozzáadás a szótárhoz</string>
    </property>
   </action>
  </widget>

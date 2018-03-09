@@ -14,6 +14,9 @@
 #include <QFileDialog>
 #include <QMainWindow>
 #include <QListWidget>
+#include <QPixmap>
+#include <QBitmap>
+#include <QMessageBox>
 #include <QDebug>
 
 #include <tesseract/baseapi.h>
@@ -21,6 +24,7 @@
 
 #include "parser.h"
 #include "searchdialog.h"
+#include "editdictdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -41,23 +45,37 @@ private:
 
     Parser parser;
 
+    //Listák adatai
     vector<string> parserInput;
     vector<Product> parserOutput;
     vector<QJsonValue> recommendations;
 
-    int currentId;
+
+    //Mentett kép soron következő indexe
+    int savedImageId;
 
 private slots:
     void replyFinished(QNetworkReply*);
     void imageDownloaded(QNetworkReply*);
 
-    void on_actionOpen_triggered();
-    void on_actionSearchOnline_triggered();
-
     void productClicked(QListWidgetItem*);
     void recomClicked(QListWidgetItem*);
 
- public slots:
+    void on_actionOpen_triggered();
+    void on_actionSearchOnline_triggered();
+    void on_actionQuit_triggered();
+    void on_actionSaveImage_triggered();
+    void on_actionSaveParsed_triggered();
+
+    void on_actionSaveOnlineResult_triggered();
+
+    void on_actionEditDict_triggered();
+
+    void on_actionSaveAllOnlineResults_triggered();
+
+    void on_actionAddToDictionary_triggered();
+
+public slots:
     void onExecuteSearch(QString query);
 };
 

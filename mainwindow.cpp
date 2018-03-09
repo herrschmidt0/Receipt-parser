@@ -2,11 +2,13 @@
 #include "ui_mainwindow.h"
 
 
-MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow),
+                                          savedImageId(0)
 {
     ui->setupUi(this);
 
     setWindowTitle("Nyugtafelismerő");
+    setWindowState(Qt::WindowMaximized);
     setlocale(LC_NUMERIC, "C");
 
     api = new tesseract::TessBaseAPI();
@@ -16,8 +18,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
        exit(1);
     }
     api->ReadConfigFile("note");
-
-    currentId = -1;
 
     connect(ui->productsList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(productClicked(QListWidgetItem*)));
     connect(ui->recomsList, SIGNAL(itemClicked(QListWidgetItem*)), this, SLOT(recomClicked(QListWidgetItem*)));
@@ -32,13 +32,13 @@ void MainWindow::on_actionOpen_triggered()
 
     if(!fileName.isEmpty())
     {
+        //Fájl beolvasása
         QByteArray fileNameBytes = fileName.toLatin1();
 
-        //qDebug()<<fileName;
-
+        //Tesseract futtatása
         Pix *image = pixRead(fileNameBytes.data());
         api->SetImage(image);
-        // Get OCR result
+
         char *outText;
         outText = api->GetUTF8Text();
         //std::cout<<"OCR: "<<outText;
@@ -47,6 +47,7 @@ void MainWindow::on_actionOpen_triggered()
         std::stringstream ss(outText);
         std::string line;
 
+        //Ha nem üres az eredmény, akkor parszer futtatása
         if (outText != NULL)
         {
             parserInput.clear();
@@ -68,6 +69,13 @@ void MainWindow::on_actionOpen_triggered()
                 item->setData(Qt::UserRole, QVariant(i));
                 ui->productsList->addItem(item);
             }
+
+
+            QPixmap pixmap(fileName);
+            ui->note->setPixmap(pixmap);
+            ui->note->setMask(pixmap.mask());
+
+            ui->note->show();
         }
     }
 }
@@ -89,18 +97,128 @@ void MainWindow::productClicked(QListWidgetItem * arg)
                                     + "-ra: " + QString::fromStdString(parserOutput[id].abrevs[i].Long));
     }
 
-    /** A keresési ablak mezőjébe be fog másolódni a kiválasztott termék neve **/
-    currentId = id;
 }
+
+/* Parszolás eredményének mentése fájlba */
+void MainWindow::on_actionSaveParsed_triggered()
+{
+    QFile file("parszer_eredmenyek");
+
+    if (parserOutput.size() && file.open(QIODevice::WriteOnly | QIODevice::Append))
+    {
+        QTextStream stream(&file);
+
+        stream << "Nyugta \n \n";
+
+        for(size_t i=0; i<parserOutput.size(); ++i)
+        {
+            stream << QString::fromUtf8("Név: ")<< QString::fromStdString(parserOutput[i].name)
+                   << QString::fromUtf8(" Ár: ") << QString::number(parserOutput[i].price) << '\n';
+        }
+
+        stream << "\n \n";
+        stream.setGenerateByteOrderMark(true);
+
+        QMessageBox messageBox;
+        messageBox.information(0,"Ok","Digitalizálás eredménye mentve!");
+        messageBox.setFixedSize(500,200);
+    }
+
+    file.close();
+}
+
+/* Javaslat hozzáadása a szótárhoz */
+void MainWindow::on_actionAddToDictionary_triggered()
+{
+    int idRow = ui->productDetails->currentRow();
+
+    // A 4. sortól kezdődnek a javaslatok
+    if(idRow>=4)
+    {
+        int idProduct = ui->productsList->currentRow();
+
+        QString word_long = QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Long);
+        word_long = word_long.normalized(QString::NormalizationForm_D);
+        QString word_short = QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Short);
+        word_short = word_short.normalized(QString::NormalizationForm_D);
+
+        //Hozzáadja a sima szótárhoz, meg a rövidítéses szótárhoz is
+        QFile dict("termekek.txt"), abrevDict("roviditesek.txt");
+
+        QTextStream dictStream(&dict);
+        QTextStream abrevDictStream(&abrevDict);
+
+        // Hozzáadás a szótárhoz
+        if(dict.open(QIODevice::ReadWrite))
+        {
+            QString lastLine, line, startOfFile;
+
+            line = dictStream.readLine().normalized(QString::NormalizationForm_D);
+
+            while(!dictStream.atEnd() && word_long > line)
+            {
+                startOfFile.push_back(line+'\n');
+                lastLine = line;
+                line = dictStream.readLine().normalized(QString::NormalizationForm_D);
+            }
+
+            lastLine = lastLine.normalized(QString::NormalizationForm_D);
+
+            qDebug() << lastLine << QString::compare(lastLine,word_long, Qt::CaseInsensitive) << word_long;
+
+            if(lastLine == word_long)
+            {
+                QMessageBox messageBox;
+                messageBox.information(0,"Ütközés","Az adott szó már szerepel a szótárban.");
+                messageBox.setFixedSize(500,200);
+            }
+            else
+            {
+                QString endOfFile = dictStream.readAll();
+                startOfFile.push_back(word_long + '\n');
+
+                dict.resize(0);
+                dictStream << (startOfFile + line + '\n' + endOfFile);
+
+                //qDebug() << linesStartingHere;
+            }
+
+            dict.close();
+        }
+
+       /* if(abrevDict.open(QIODevice::ReadWrite))
+        {
+            QString line;
+
+
+            do
+            {
+              DictElem d(abrevDictStream.readLine().normalized(QString::NormalizationForm_D);
+
+            }while(!abrevDictStream.atEnd() && word_short != line.);
+        }*/
+
+        //qDebug()<< QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Long);
+    }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","Nincs kijelölve megfelelő elem!");
+        messageBox.setFixedSize(500,200);
+    }
+}
+
 
 /* Megnyitották az online keresés ablakot */
 void MainWindow::on_actionSearchOnline_triggered()
 {
+    int id = ui->productsList->currentRow();
+
     SearchDialog *dialog;
-    if(currentId == -1)
-        dialog = new SearchDialog(this, "");
+    if(id == -1)
+        dialog = new SearchDialog(this);
     else
-        dialog = new SearchDialog(this, parserOutput[currentId].name);
+        dialog = new SearchDialog(this, parserOutput[id].name);
 
     dialog->open();
 
@@ -151,6 +269,78 @@ void MainWindow::replyFinished(QNetworkReply *reply)
     }
 }
 
+/* Kijelölt online találat mentése */
+void MainWindow::on_actionSaveOnlineResult_triggered()
+{
+    QFile file("talalat_eredmenyek");
+
+    int id = ui->recomsList->currentRow();
+
+    if (id!=-1 && recommendations.size() && file.open(QIODevice::WriteOnly | QIODevice::Append))
+    {
+        QTextStream stream(&file);
+
+        stream << QString::fromUtf8("Keresési eredmény \n\n");
+
+        stream << QString::fromUtf8("Név: ")<< recommendations[id]["title"].toString()
+               << QString::fromUtf8("\nLeírás: ") << recommendations[id]["snippet"].toString()
+               << "\n\n";
+
+        QMessageBox messageBox;
+        messageBox.information(0,"Ok","Kijelölt találat mentve!");
+        messageBox.setFixedSize(500,200);
+    }
+    else if(recommendations.size()==0)
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","Nincsenek találatok!");
+        messageBox.setFixedSize(500,200);
+    }
+    else if(id==-1)
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","Nincs kijelölve egy elem sem!");
+        messageBox.setFixedSize(500,200);
+    }
+
+
+    file.close();
+}
+
+/* Online találatok mentése */
+void MainWindow::on_actionSaveAllOnlineResults_triggered()
+{
+    QFile file("talalat_eredmenyek");
+
+    if (recommendations.size() && file.open(QIODevice::WriteOnly | QIODevice::Append))
+    {
+        QTextStream stream(&file);
+
+        stream << QString::fromUtf8("Keresési eredmény \n\n");
+
+        for(size_t i=0; i<recommendations.size(); ++i)
+        {
+            stream << QString::fromUtf8("Név: ")<< recommendations[i]["title"].toString()
+               << QString::fromUtf8("\nLeírás: ") << recommendations[i]["snippet"].toString()
+               << "\n\n";
+        }
+
+        QMessageBox messageBox;
+        messageBox.information(0,"Ok","Találatok mentve!");
+        messageBox.setFixedSize(500,200);
+    }
+    else if(recommendations.size()==0)
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","Nincsenek találatok!");
+        messageBox.setFixedSize(500,200);
+    }
+
+    file.close();
+}
+
+
+
 /* Online találatok egy elemére kattintottak */
 void MainWindow::recomClicked(QListWidgetItem * arg)
 {
@@ -158,6 +348,7 @@ void MainWindow::recomClicked(QListWidgetItem * arg)
 
     /** Találat részleteinek a feltöltése **/
     int id = arg->data(Qt::UserRole).toInt();
+
     ui->recomDetails->addItem("Cím: " + recommendations[id]["title"].toString());
     ui->recomDetails->addItem("Leírás: \n" + recommendations[id]["snippet"].toString());
 
@@ -194,8 +385,40 @@ void MainWindow::imageDownloaded(QNetworkReply *reply)
     ui->image->setPixmap(pixmap);
 }
 
+/* Online keresés kép eredményének mentése */
+void MainWindow::on_actionSaveImage_triggered()
+{
+    if(ui->image->pixmap() != 0)
+    {
+        const QPixmap *pixmap = ui->image->pixmap();
+        QFile file("image" + QString::number(this->savedImageId)+".png");
+        ++savedImageId;
+
+        file.open(QIODevice::WriteOnly);
+        pixmap->save(&file, "PNG");
+        file.close();
+
+        QMessageBox messageBox;
+        messageBox.information(0,"Ok","Kép mentve!");
+        messageBox.setFixedSize(500,200);
+    }
+}
+
+void MainWindow::on_actionEditDict_triggered()
+{
+    EditDictDialog *dialog = new EditDictDialog(this);
+    dialog->open();
+}
+
+
+/* Kilépés */
+void MainWindow::on_actionQuit_triggered()
+{
+    this->close();
+}
+
+/* Destruktor */
 MainWindow::~MainWindow()
 {
     delete ui;
 }
-

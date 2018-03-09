@@ -10,6 +10,12 @@ struct DictElem
 
     DictElem() = default;
     DictElem(string s, string l) : Short(s), Long(l) {}
+    DictElem(string line)
+    {
+        int firstSpacePos = line.find_first_of(' ');
+        Short = line.substr(0, firstSpacePos);
+        Long = line.substr(firstSpacePos+1);
+    }
 };
 
 

@@ -38,15 +38,6 @@ public:
         for(size_t i=0; i<input.size(); ++i){
             removeUnnecessaryCharacters(input[i]);
         }
-        /*
-        size_t line_nr = 1;
-        size_t possible_lines_for_sum;
-
-        while(line_nr < input.size() && !isListDelimiter(input[line_nr-1])){
-            cout<<input[line_nr-1]<<'\n';
-            ++line_nr;
-        }*/
-
 
         for(size_t i=0;i<input.size();++i){
 
@@ -54,7 +45,7 @@ public:
 
                 Product product;
 
-                qDebug()<<QString::fromStdString( input[i] );
+                //qDebug()<<QString::fromStdString( input[i] );
 
                 int tc_pos = isProductLine(input[i], product);
 
@@ -74,21 +65,6 @@ public:
         for(size_t i=0; i<input.size();++i){
             searchLineForSum(input[i]);
         }
-
-
-        /*
-        //Spell Checker próba
-        std::vector<string> res;
-
-        SpellChecker sc;
-
-        sc.getRecommendations("isszesen",res);
-
-        for(unsigned int i=0;i<res.size();++i){
-            cout<<res[i]<<'\n';
-        }
-        cout<<"Size: "<<res.size();
-        */
     }
 
 private:

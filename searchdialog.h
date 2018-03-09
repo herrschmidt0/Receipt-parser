@@ -13,7 +13,7 @@ class SearchDialog : public QDialog
     Q_OBJECT
 
 public:
-    SearchDialog(QWidget *parent, std::string placeholder) : QDialog(parent)
+    SearchDialog(QWidget *parent, std::string placeholder = "") : QDialog(parent)
     {
         setWindowTitle("Online keresés");
 
