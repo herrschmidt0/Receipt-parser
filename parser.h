@@ -145,89 +145,57 @@ private:
         // X00 TERMEKNEV AR - formátumú
         if(tc_pos == 1){
 
-            int first_space_pos = line.find_first_of(' ');
-            line = line.substr(first_space_pos+1);
+            int firstSpacePos = line.find_first_of(' ');
+            line = line.substr(firstSpacePos+1);
         }
         // TERMEKNEV AR X00 - formátumú
         else{
 
-            int last_space_pos = line.find_last_of(' ');
-            line = line.substr(0, last_space_pos);
+            int lastSpacePos = line.find_last_of(' ');
+            line = line.substr(0, lastSpacePos);
         }
 
-        int price_pos = line.length() - 1;
-        bool space_found = false;
+        int pricePos = line.length() - 1;
+        bool spaceFound = false;
 
-        if(price_pos > 0)
+        if(pricePos > 0)
         {
 
             /** Felismeri a több, mint 3 jegyű számokat,
-             * ahol esetenként a számjegyek 1 space-el vannak elválasztva **/
-            while(price_pos > 0 && (isspace(line[price_pos]) || isdigit(line[price_pos])))
+             * ahol esetenként a számjegyek 1 space-el vannak elválasztva **/       
+            while(pricePos > 0 && (isspace(line[pricePos]) || isdigit(line[pricePos])))
             {
-                if(isspace(line[price_pos]))
+                if(isspace(line[pricePos]))
                 {
-                    if(!space_found)
-                        space_found = true;
+                    if(!spaceFound)
+                        spaceFound = true;
                     else
                         break;
                 }
                 else
-                    space_found = false;
+                   spaceFound = false;
 
-                --price_pos;
+                --pricePos;
             }
 
+            int number = 0;
+            for(int i=pricePos; i<line.length(); ++i)
+                if(isdigit(line[i]))
+                {
+                    number = number*10 + line[i] - 48;
+                }
+
+            product.price = number;
+
             //Terméknév
-            string productString = line.substr(0, price_pos);
+            string productString = line.substr(0, pricePos);
             abrevSolver.resolveAbbrevs(productString, product);
             product.name = runSpellcheckOnProduct(productString);
 
-            /** Termékár
-            *  Kitörli a space-eket a stringből,
-            *  aztán stoi-val a stringet int-té konvertálja  **/
-            string number_str = line.substr(price_pos);
-            for(size_t i=0; i<number_str.length(); ++i)
-                if(isspace(number_str[i]))
-                    number_str.erase(i,1);
-            try{
-                product.price = std::stoi(number_str);
-                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_FOUND;
-            }
-            catch(std::invalid_argument& e){
-                qDebug() << "Invalid argument! at number parsing";
-                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
-            }
         }
         else{
             product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
         }
-
-
-/*
-            int price_pos = line.find_last_of(' ');
-
-            if(price_pos > 0)
-            {
-                //Name
-                std::string productString = line.substr(0,price_pos);
-                abrevSolver.resolveAbbrevs(productString);
-                product.name = runSpellcheckOnProduct(productString);
-
-                //Price
-                string number_str = line.substr(price_pos);
-                try{
-                    product.price = std::stoi(number_str);
-                    product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_FOUND;
-                }
-                catch(std::invalid_argument& e){
-                    qDebug() << "Invalid argument! at number parsing";
-                    product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
-                }
-            }
-            else{
-                product.confidence =  alpha*product.confidence + (1-alpha)*PRICE_CONF_ERROR;
-            }*/
 
     }
 

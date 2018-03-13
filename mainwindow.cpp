@@ -93,8 +93,8 @@ void MainWindow::productClicked(QListWidgetItem * arg)
     ui->productDetails->addItem("Eredeti terméksor: " + QString::fromStdString(parserOutput[id].originalLine));
     for(size_t i=0; i<parserOutput[id].abrevs.size(); ++i)
     {
-        ui->productDetails->addItem("Javaslat " + QString::fromStdString(parserOutput[id].abrevs[i].Short)
-                                    + "-ra: " + QString::fromStdString(parserOutput[id].abrevs[i].Long));
+        ui->productDetails->addItem("Javaslat " + parserOutput[id].abrevs[i].Short
+                                    + "-ra: " + parserOutput[id].abrevs[i].Long);
     }
 
 }
@@ -102,7 +102,7 @@ void MainWindow::productClicked(QListWidgetItem * arg)
 /* Parszolás eredményének mentése fájlba */
 void MainWindow::on_actionSaveParsed_triggered()
 {
-    QFile file("parszer_eredmenyek");
+    QFile file("parszer_eredmenyek.txt");
 
     if (parserOutput.size() && file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
@@ -123,6 +123,12 @@ void MainWindow::on_actionSaveParsed_triggered()
         messageBox.information(0,"Ok","Digitalizálás eredménye mentve!");
         messageBox.setFixedSize(500,200);
     }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","Nincs beparszolt nyugta!");
+        messageBox.setFixedSize(500,200);
+    }
 
     file.close();
 }
@@ -130,6 +136,7 @@ void MainWindow::on_actionSaveParsed_triggered()
 /* Javaslat hozzáadása a szótárhoz */
 void MainWindow::on_actionAddToDictionary_triggered()
 {
+    QString message;
     int idRow = ui->productDetails->currentRow();
 
     // A 4. sortól kezdődnek a javaslatok
@@ -137,9 +144,9 @@ void MainWindow::on_actionAddToDictionary_triggered()
     {
         int idProduct = ui->productsList->currentRow();
 
-        QString word_long = QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Long);
+        QString word_long = parserOutput[idProduct].abrevs[idRow-4].Long;
         word_long = word_long.normalized(QString::NormalizationForm_D);
-        QString word_short = QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Short);
+        QString word_short = parserOutput[idProduct].abrevs[idRow-4].Short;
         word_short = word_short.normalized(QString::NormalizationForm_D);
 
         //Hozzáadja a sima szótárhoz, meg a rövidítéses szótárhoz is
@@ -148,7 +155,7 @@ void MainWindow::on_actionAddToDictionary_triggered()
         QTextStream dictStream(&dict);
         QTextStream abrevDictStream(&abrevDict);
 
-        // Hozzáadás a szótárhoz
+        // Hozzáadás a termékszótárhoz
         if(dict.open(QIODevice::ReadWrite))
         {
             QString lastLine, line, startOfFile;
@@ -164,13 +171,11 @@ void MainWindow::on_actionAddToDictionary_triggered()
 
             lastLine = lastLine.normalized(QString::NormalizationForm_D);
 
-            qDebug() << lastLine << QString::compare(lastLine,word_long, Qt::CaseInsensitive) << word_long;
+            qDebug() << lastLine << QString::compare(lastLine,word_long, Qt::CaseInsensitive) << line;
 
-            if(lastLine == word_long)
+            if(line == word_long)
             {
-                QMessageBox messageBox;
-                messageBox.information(0,"Ütközés","Az adott szó már szerepel a szótárban.");
-                messageBox.setFixedSize(500,200);
+                message.push_back("Az adott szó már szerepel a termékszótárban.\n");
             }
             else
             {
@@ -181,22 +186,39 @@ void MainWindow::on_actionAddToDictionary_triggered()
                 dictStream << (startOfFile + line + '\n' + endOfFile);
 
                 //qDebug() << linesStartingHere;
+                message.push_back("Sikeresen hozzáadva a termékszótárhoz!\n");
             }
 
             dict.close();
         }
 
-       /* if(abrevDict.open(QIODevice::ReadWrite))
+        //Hozzáadaás a rövidítéses szótárhoz
+        if(abrevDict.open(QIODevice::ReadWrite))
         {
-            QString line;
-
+            DictElem d;
 
             do
             {
-              DictElem d(abrevDictStream.readLine().normalized(QString::NormalizationForm_D);
+              d.setFromLine(abrevDictStream.readLine().normalized(QString::NormalizationForm_D));
 
-            }while(!abrevDictStream.atEnd() && word_short != line.);
-        }*/
+            }while(!abrevDictStream.atEnd() && (word_short != d.Short || word_long != d.Long));
+
+            if(abrevDictStream.atEnd() && (word_short != d.Short || word_long != d.Long))
+            {
+                abrevDictStream << word_short << ' ' << word_long << '\n';
+                message.push_back("Sikeresen hozzáadva a rövidítésekhez!\n");
+            }
+            else
+            {
+                 message.push_back("Az adott szó már szerepel a rövidítések között.\n");
+            }
+
+            abrevDict.close();
+        }
+
+        QMessageBox messageBox;
+        messageBox.information(0,"Info", message);
+        messageBox.setFixedSize(500, 200);
 
         //qDebug()<< QString::fromStdString(parserOutput[idProduct].abrevs[idRow-4].Long);
     }
@@ -272,7 +294,7 @@ void MainWindow::replyFinished(QNetworkReply *reply)
 /* Kijelölt online találat mentése */
 void MainWindow::on_actionSaveOnlineResult_triggered()
 {
-    QFile file("talalat_eredmenyek");
+    QFile file("keresesi_eredmenyek.txt");
 
     int id = ui->recomsList->currentRow();
 
@@ -310,7 +332,7 @@ void MainWindow::on_actionSaveOnlineResult_triggered()
 /* Online találatok mentése */
 void MainWindow::on_actionSaveAllOnlineResults_triggered()
 {
-    QFile file("talalat_eredmenyek");
+    QFile file("keresesi_eredmenyek.txt");
 
     if (recommendations.size() && file.open(QIODevice::WriteOnly | QIODevice::Append))
     {
@@ -404,6 +426,7 @@ void MainWindow::on_actionSaveImage_triggered()
     }
 }
 
+/* Szótárszerkesztő felület indítása */
 void MainWindow::on_actionEditDict_triggered()
 {
     EditDictDialog *dialog = new EditDictDialog(this);

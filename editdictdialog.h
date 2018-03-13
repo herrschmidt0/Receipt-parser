@@ -14,54 +14,63 @@ class EditDictDialog : public QDialog
     Q_OBJECT
 
 public:
-    EditDictDialog(QWidget *parent) : QDialog(parent)
+    EditDictDialog(QWidget *parent) : QDialog(parent), dict1("termekek.txt"), dict2("roviditesek.txt")
     {
         setWindowTitle("Szótár szerkesztése");
 
-        QVBoxLayout *layout = new QVBoxLayout();
+        areaLabel.setText("Szótárak tartalma");
 
-        areaLabel = new QLabel();
-        areaLabel->setText("Szótár tartalma");
+        dict1.open(QIODevice::ReadOnly);
+        dict2.open(QIODevice::ReadOnly);
+        QTextStream stream1(&dict1), stream2(&dict2);
+        QString data1 = stream1.readAll(), data2 = stream2.readAll();
 
-        area = new QTextEdit();
+        area1.setText(data1);
+        area2.setText(data2);
 
-        dict = new QFile("termekek.txt");
-        dict->open(QIODevice::ReadOnly);
-        QTextStream in(dict);
-        QString data = in.readAll();
-        area->setText(data);
+        saveButton.setText("Mentés");
+        connect(&saveButton, SIGNAL(clicked(bool)), this, SLOT(save(bool)));
 
-        saveButton = new QPushButton();
-        saveButton->setText("Mentés");
-        connect(saveButton, SIGNAL(clicked(bool)), this, SLOT(save(bool)));
+        mainLayout.addWidget(&areaLabel);
+        areasLayout.addWidget(&area1);
+        areasLayout.addWidget(&area2);
+        mainLayout.addLayout(&areasLayout);
+        mainLayout.addWidget(&saveButton);
 
-        layout->addWidget(areaLabel);
-        layout->addWidget(area);
-        layout->addWidget(saveButton);
+        this->setLayout(&mainLayout);
 
-        this->setLayout(layout);
-
-        dict->close();
+        dict1.close();
+        dict2.close();
     }
 
 private:
-    QLabel *areaLabel;
-    QTextEdit *area;
-    QPushButton *saveButton;
+    QVBoxLayout mainLayout;
+    QHBoxLayout areasLayout;
 
-    QFile *dict;
+    QLabel areaLabel;
+
+    QTextEdit area1, area2;
+    QPushButton saveButton;
+
+    QFile dict1, dict2;
 
 private slots:
     void save(bool)
     {
-        dict->open(QIODevice::ReadWrite);
-        dict->resize(0);
+        dict1.open(QIODevice::ReadWrite);
+        dict1.resize(0);
 
-        QString newData = area->toPlainText();
-        QTextStream out(dict);
-        out << newData;
+        dict2.open(QIODevice::ReadWrite);
+        dict2.resize(0);
 
-        dict->close();
+        QString newData1 = area1.toPlainText(),
+                newData2 = area2.toPlainText();
+        QTextStream stream1(&dict1), stream2(&dict2);
+        stream1 << newData1;
+        stream2 << newData2;
+
+        dict1.close();
+        dict2.close();
         close();
     }
 };

@@ -5,16 +5,21 @@ using namespace std;
 
 struct DictElem
 {
-    string Short;
-    string Long;
+    QString Short;
+    QString Long;
 
     DictElem() = default;
-    DictElem(string s, string l) : Short(s), Long(l) {}
-    DictElem(string line)
+    DictElem(QString s, QString l) : Short(s), Long(l) {}
+    DictElem(QString line)
     {
-        int firstSpacePos = line.find_first_of(' ');
-        Short = line.substr(0, firstSpacePos);
-        Long = line.substr(firstSpacePos+1);
+      setFromLine(line);
+    }
+
+    void setFromLine(QString line)
+    {
+        int firstSpacePos = line.indexOf(' ');
+        Short = line.mid(0, firstSpacePos);
+        Long = line.mid(firstSpacePos+1);
     }
 };
 

@@ -208,7 +208,7 @@
   </action>
   <action name="actionEditDict">
    <property name="text">
-    <string>Szótár szerkesztése</string>
+    <string>Szótárak szerkesztése</string>
    </property>
   </action>
   <action name="actionSaveAllOnlineResults">

@@ -11,6 +11,7 @@
 #include <QEventLoop>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QFile>
 
 #include "defines.h"
 
@@ -20,19 +21,23 @@ class Abbreviation: public QObject
 {
     Q_OBJECT
 public:
-    Abbreviation() : dictionaryFile("roviditesek.txt")
+    Abbreviation() : dictionaryFile("roviditesek.txt"), stream(&dictionaryFile)
     {
-        string s, l;
+        QString s, l;
         DictElem elem;
 
+        dictionaryFile.open(QIODevice::ReadOnly);
+
         /** Beolvassa szótár szavai egy vektorba **/
-        while(!dictionaryFile.eof())
+        while(!stream.atEnd())
         {
-            dictionaryFile >> s >> l;
+            stream >> s >> l;
             elem.Long = l;
             elem.Short = s;
             dictionary.push_back(elem);
         }
+
+        dictionaryFile.close();
     }
 
     /*
@@ -78,14 +83,20 @@ public:
                 foundInDictionary = false;
                 for(size_t i=0; i<dictionary.size(); ++i)
                 {
-                    /*qDebug()<<QString::fromStdString(dictionary[i].Short)
-                    << QString::fromStdString(input.substr(i_pos, pos-i_pos));*/
+                    qDebug()<<dictionary[i].Short
+                    << QString::fromStdString(input.substr(i_pos, pos-i_pos));
 
-                   if(dictionary[i].Short == input.substr(i_pos, pos-i_pos))
+                   if(dictionary[i].Short.toStdString() == input.substr(i_pos, pos-i_pos))
                    {
+                       qDebug()<<dictionary[i].Short
+                       << QString::fromStdString(input.substr(i_pos, pos-i_pos));
+
+                       /*
                       input.erase(i_pos, pos-i_pos+1);
-                      input.insert(i_pos, dictionary[i].Long);
-                      pos = i_pos + dictionary[i].Long.length() + 1;
+                      input.insert(i_pos, dictionary[i].Long.toStdString());
+                      pos = i_pos + dictionary[i].Long.length() + 1;*/
+
+                      product.abrevs.push_back(DictElem(dictionary[i].Short, dictionary[i].Long));
                       foundInDictionary = true;
                    }
                 }
@@ -112,7 +123,7 @@ public:
 
                     for(int i=0; i<results.count(); ++i)
                     {
-                        DictElem e(input.substr(i_pos, pos-i_pos), results[i].toString().toStdString());
+                        DictElem e(QString::fromStdString(input.substr(i_pos, pos-i_pos)), results[i].toString());
                         product.abrevs.push_back(e);
                     }
                 }
@@ -126,7 +137,8 @@ public:
     }
 
 private:
-    std::ifstream dictionaryFile;
+    QFile dictionaryFile;
+    QTextStream stream;
 
     std::vector<DictElem> dictionary;
 
