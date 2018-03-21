@@ -13,7 +13,7 @@ class SearchDialog : public QDialog
     Q_OBJECT
 
 public:
-    SearchDialog(QWidget *parent, std::string placeholder = "") : QDialog(parent)
+    SearchDialog(QWidget *parent, QString placeholder = "") : QDialog(parent)
     {
         setWindowTitle("Online keresés");
 
@@ -23,7 +23,7 @@ public:
         queryLabel->setText("Keresendő szöveg:");
 
         query = new QLineEdit();
-        query->setText(QString::fromStdString(placeholder));
+        query->setText(placeholder);
 
         sendButton = new QPushButton();
         sendButton->setText("Küldés");

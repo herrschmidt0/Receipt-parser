@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 
+#include <QTextStream>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QUrl>
@@ -46,13 +47,10 @@ private:
     Parser parser;
 
     //Listák adatai
-    vector<string> parserInput;
+    vector<QString> parserInput;
     vector<Product> parserOutput;
     vector<QJsonValue> recommendations;
 
-
-    //Mentett kép soron következő indexe
-    int savedImageId;
 
 private slots:
     void replyFinished(QNetworkReply*);

@@ -43,21 +43,21 @@ public:
     /*
      * Felismeri a rövidített szavakat és szótár használatával kibontja azokat
      */
-    void resolveAbbrevs(string& input, Product&product)
+    void resolveAbbrevs(QString& input, Product&product)
     {
-        size_t i_pos, pos = 0;
+        int i_pos, pos = 0;
         bool foundInDictionary;
 
         /** Szó és pont közti space-ek törlése **/
         int j;
-        for(size_t i=1; i< input.length(); ++i)
+        for(int i=1; i< input.length(); ++i)
         {
             if(input[i]=='.')
             {
                 j = i-1;
-                while(j>=0 && std::isspace(input[j]))
+                while(j>=0 && input[j].isSpace())
                     --j;
-                input.erase(j+1, i-j-1);
+                input.remove(j+1, i-j-1);
             }
         }
 
@@ -68,7 +68,7 @@ public:
         {
             i_pos = pos;
 
-            while(pos < input.length() && input[pos]!='.' && !isspace(input[pos]))
+            while(pos < input.length() && input[pos]!='.' && !input[pos].isSpace())
             {
                 ++pos;
             }
@@ -82,14 +82,12 @@ public:
                 /** Megkeresi az adott rövidítést a szótárban, találat esetén cserél **/
                 foundInDictionary = false;
                 for(size_t i=0; i<dictionary.size(); ++i)
-                {
-                    qDebug()<<dictionary[i].Short
-                    << QString::fromStdString(input.substr(i_pos, pos-i_pos));
+                {                 
 
-                   if(dictionary[i].Short.toStdString() == input.substr(i_pos, pos-i_pos))
+                   if(dictionary[i].Short == input.mid(i_pos, pos-i_pos))
                    {
                        qDebug()<<dictionary[i].Short
-                       << QString::fromStdString(input.substr(i_pos, pos-i_pos));
+                       << input.mid(i_pos, pos-i_pos);
 
                        /*
                       input.erase(i_pos, pos-i_pos+1);
@@ -102,10 +100,10 @@ public:
                 }
 
                 /** Ha nem talált pontos megfelelőt a szótárban, akkor a Google Autocomplete szolgáltatással próbálkozik **/
-                if(!foundInDictionary && input.substr(i_pos, pos-i_pos).length()>=3)
+                if(!foundInDictionary && input.mid(i_pos, pos-i_pos).length()>=3)
                 {
                     QString url = "http://suggestqueries.google.com/complete/search?client=firefox&hl=hu&q=";
-                    url.append(QString::fromStdString(input.substr(i_pos, pos-i_pos)));
+                    url.append(input.mid(i_pos, pos-i_pos));
 
                     QNetworkAccessManager *manager = new QNetworkAccessManager();
                     QNetworkRequest request;
@@ -123,7 +121,7 @@ public:
 
                     for(int i=0; i<results.count(); ++i)
                     {
-                        DictElem e(QString::fromStdString(input.substr(i_pos, pos-i_pos)), results[i].toString());
+                        DictElem e(input.mid(i_pos, pos-i_pos), results[i].toString());
                         product.abrevs.push_back(e);
                     }
                 }

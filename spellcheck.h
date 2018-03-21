@@ -9,6 +9,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <QTextStream>
+#include <QFile>
 
 #define productsDictionaryFile "termekek.txt"
 
@@ -19,20 +21,20 @@ class SpellChecker{
 private:
 
     struct node{
-        std::string word;
+        QString word;
         int distFromParent;
         std::vector<node*> children;
 
         node() = default;
-        node(std::string arg, int arg2) : word(arg), distFromParent(arg2) {}
+        node(QString arg, int arg2) : word(arg), distFromParent(arg2) {}
     } *root;
 
     struct comp{
         SpellChecker &parent;
-        string word;
+        QString word;
 
-        comp(string arg, SpellChecker&p): word(arg), parent(p) {}
-        bool operator()(string a, string b)
+        comp(QString arg, SpellChecker&p): word(arg), parent(p) {}
+        bool operator()(QString a, QString b)
         {
             return parent.LevenshteinDistance(word, a) < parent.LevenshteinDistance(word,b) ||
                    ( parent.LevenshteinDistance(word, a) == parent.LevenshteinDistance(word,b) &&
@@ -45,13 +47,8 @@ private:
     /*  Kiszámítja két szó Levenshtein távolságát,
         dinamikus programozás elveket használva.
 	*/
-    int LevenshteinDistance(std::string ps, std::string pt)
+    int LevenshteinDistance(QString s, QString t)
     {
-        std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-
-        std::wstring s = converter.from_bytes(ps);
-        std::wstring t = converter.from_bytes(pt);
-
         // create two work vectors of integer distances
         const int n = t.length();
         const int m = s.length();
@@ -84,9 +81,10 @@ private:
 
                 v1[j + 1] = std::min(v1[j] + 1, std::min(v0[j + 1] + 1, v0[j] + substitutionCost));
             }
+
             // copy v1 (current row) to v0 (previous row) for next iteration
             for(int j=0; j<n+1; ++j)
-                std::swap(v0[j],v1[j]);
+                std::swap(v0[j],v1[j]);        
          }
         // after the last swap, the results of v1 are now in v0
         return v0[n];
@@ -101,7 +99,7 @@ private:
     		akkor beteszi a többi gyerek mellé, ha van
     		akkor rekurzívan mélyebbre megy a konfliktusos csomóponton keresztül.
     */
-    void addNode(node* parent, std::string word){
+    void addNode(node* parent, QString word){
 
         if(parent->children.empty()){
             parent->children.push_back(new node(word,LevenshteinDistance(parent->word,word)));
@@ -136,15 +134,20 @@ private:
 	*/
     void createBKtree()
     {
-        std::string w;
-        std::ifstream in(productsDictionaryFile, std::ifstream::in);
+        QString w;
+        QFile in(productsDictionaryFile);
+        QTextStream ts(&in);
+        in.open(QIODevice::ReadOnly);
         
-        while (!in.eof()) {
 
-          in >> w;
+        while (!ts.atEnd()) {
+
+          ts >> w;
 
           if(!root)
-              root = new node(w,0);
+          {
+              root = new node(w, 0);
+          }
           else
               addNode(root,w);
 
@@ -154,9 +157,9 @@ private:
 
     /*	Találatokat keres egy bizonyos szóhoz, rekurzív részleges fabejárással.
     */
-    void searchMatches(node * parent, std::string word, std::vector<std::string> &results){
+    void searchMatches(node * parent, QString word, std::vector<QString> &results){
 
-        int dist = LevenshteinDistance(parent->word,word);
+        int dist = LevenshteinDistance(parent->word, word);
 
         if(dist<=maxDistance){
             results.push_back(parent->word);
@@ -167,26 +170,25 @@ private:
                 searchMatches(n,word,results);
             }
         }
+
     }
 
 
 
 public:
 
-    SpellChecker() : root(nullptr) {
+    SpellChecker() : root(0) {
 
         //Build the BK tree
         createBKtree();
-        //cout<<"BK tree created. \n";
     }
 
 
-    void getRecommendations(std::string input, std::vector<std::string>& results)
-    {
-        //setlocale(LC_ALL, "hu_HU.ISO88592");
-  
+    void getRecommendations(QString input, std::vector<QString>& results)
+    {    
+
         /** Kisbetűkké alakít minden betűt **/
-        std::transform(input.begin(), input.end(), input.begin(), ::tolower);
+        input.toLower();
 
         /** A szó hosszától függően állapítja meg a maximális távolságot **/
         if(input.length() <= 4)

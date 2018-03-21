@@ -26,10 +26,10 @@ struct DictElem
 
 struct Product
 {
-    string name;
+    QString name;
     int price;
 
-    string originalLine;
+    QString originalLine;
     int confidence;
     vector<DictElem> abrevs;
 
