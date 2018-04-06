@@ -5,7 +5,7 @@
 #-------------------------------------------------
 
 QT       += core gui
-QT       += network
+QT       += network concurrent
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = nyaam1_qt

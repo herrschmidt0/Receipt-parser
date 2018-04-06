@@ -1,13 +1,13 @@
 #ifndef PARSER_H
 #define PARSER_H
-
+/*
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include <vector>
 #include <string>
 #include <regex>
-#include <cctype>
+#include <cctype>*/
 
 #include "spellcheck.h"
 #include "abbreviation.h"
@@ -45,7 +45,7 @@ public:
 
                 Product product;
 
-                qDebug()<<input[i];
+                //qDebug()<<input[i];
 
                 int tc_pos = isProductLine(input[i], product);
 
@@ -63,9 +63,6 @@ public:
             }
         }
 
-       /* for(size_t i=0; i<input.size();++i){
-            searchLineForSum(input[i]);
-        }*/
     }
 
 private:

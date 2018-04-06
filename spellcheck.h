@@ -1,13 +1,14 @@
 #ifndef SPELLCH_H
 #define SPELLCH_H
 
+/*
 #include <iostream>
 #include <fstream>
 #include <locale>
 #include <codecvt>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <algorithm>*/
 
 #include <QTextStream>
 #include <QFile>
@@ -202,10 +203,21 @@ public:
         sort(results.begin(), results.end(), comp(input, *this));
     }
 
+
     ~SpellChecker(){
-        //delete root;
+        deleteTree(root);
     }
 
+    void deleteTree(node *x)
+    {
+        if(x!=NULL)
+        {
+            for(node *l: x->children)
+                deleteTree(l);
+
+            delete x;
+        }
+    }
 
 };
 

@@ -1,9 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <string>
-#include <sstream>
-
 #include <QTextStream>
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
@@ -18,6 +15,10 @@
 #include <QPixmap>
 #include <QBitmap>
 #include <QMessageBox>
+#include <QFuture>
+#include <QtConcurrent>
+#include <QProgressDialog>
+#include <QElapsedTimer>
 #include <QDebug>
 
 #include <tesseract/baseapi.h>
@@ -43,6 +44,8 @@ private:
     Ui::MainWindow *ui;
 
     tesseract::TessBaseAPI *api;
+    QFuture<QString> tessFuture;
+    QProgressDialog *ocrProgress;
 
     Parser parser;
 
@@ -51,6 +54,7 @@ private:
     vector<Product> parserOutput;
     vector<QJsonValue> recommendations;
 
+    QElapsedTimer timer;
 
 private slots:
     void replyFinished(QNetworkReply*);
@@ -74,6 +78,7 @@ private slots:
     void on_actionAddToDictionary_triggered();
 
 public slots:
+    void handleOCRFinished();
     void onExecuteSearch(QString query);
 };
 

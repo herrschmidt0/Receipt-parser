@@ -1,7 +1,6 @@
 #ifndef SEARCHDIALOG_H
 #define SEARCHDIALOG_H
 
-#include <string>
 #include <QDialog>
 #include <QLineEdit>
 #include <QLabel>

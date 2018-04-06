@@ -29,6 +29,35 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 }
 
 
+QString processText(QString fileName, tesseract::TessBaseAPI *api)
+{
+    //Fájl beolvasása
+    QByteArray fileNameBytes = fileName.toLatin1();
+
+    Pix *image = pixRead(fileNameBytes.data());
+    api->SetImage(image);
+
+    char *outText;
+    try
+    {
+        outText = api->GetUTF8Text();
+    }
+    catch(...)
+    {
+         qDebug() << "OCR kifagyott";
+    }
+
+
+    QString outQString;
+    if(outText != NULL)
+    {
+        outQString = QString(outText);
+    }
+
+    delete image;
+    delete outText;
+    return outQString;
+}
 
 /* Fájl megnyitása gombra kattintottak */
 void MainWindow::on_actionOpen_triggered()
@@ -37,76 +66,79 @@ void MainWindow::on_actionOpen_triggered()
 
     if(!fileName.isEmpty())
     {
-        //Fájl beolvasása
-        QByteArray fileNameBytes = fileName.toLatin1();
+        timer.start();
 
-        //Tesseract futtatása
-        Pix *image = pixRead(fileNameBytes.data());
-        api->SetImage(image);
+        ocrProgress = new QProgressDialog("Nyugtabeolvasás folyamatban...", "Cancel", 0, 100);
+        ocrProgress->show();
 
-        char *outText;
-        try
+        //Tesseract futtatása külön szálon       
+        tessFuture = QtConcurrent::run(processText, fileName, api);
+        QFutureWatcher<QString> *watcher = new QFutureWatcher<QString>();
+        watcher->setFuture(tessFuture);
+
+        connect(watcher, SIGNAL(finished()), this, SLOT(handleOCRFinished()));
+
+        //A nyugta képének megjelenítése
+        QPixmap pixmap(fileName);
+        ui->note->setPixmap(pixmap);
+        ui->note->setMask(pixmap.mask());
+    }
+}
+
+void MainWindow::handleOCRFinished()
+{
+    ocrProgress->setValue(100);
+    ocrProgress->deleteLater();
+
+    QString outQString = tessFuture.result();
+
+    //Ha nem üres az eredmény, akkor parszer futtatása
+    if (!outQString.isEmpty())
+    {
+        parserInput.clear();
+
+        //Sorokra bontja a folytonos szöveget
+        QTextStream ss(&outQString);
+
+        while(!ss.atEnd())
         {
-            outText = api->GetUTF8Text();
+            parserInput.push_back(ss.readLine());
         }
-        catch(...)
+
+        //Parser futtatása
+        parserOutput.clear();
+        parser.executeParser(parserInput, parserOutput);
+
+        //Ablak feltöltése az eredménnyel
+        ui->productsList->clear();
+        ui->productDetails->clear();
+
+        if(parserOutput.size() > 0)
         {
-             qDebug() << "OCR kifagyott";
-        }
-
-        //Ha nem üres az eredmény, akkor parszer futtatása
-        if (outText != NULL)
-        {
-            parserInput.clear();
-
-            //Sorokra bontja a folytonos szöveget
-            QString outQString(outText);
-            QTextStream ss(&outQString);
-
-            while(!ss.atEnd())
+            for(size_t i=0; i<parserOutput.size(); ++i)
             {
-                parserInput.push_back(ss.readLine());
+                QListWidgetItem *item = new QListWidgetItem();
+                item->setText(parserOutput[i].name);
+                item->setData(Qt::UserRole, QVariant(int(i)));
+                ui->productsList->addItem(item);
             }
-
-            //Parser futtatása
-            parserOutput.clear();
-            parser.executeParser(parserInput, parserOutput);
-
-            //Ablak feltöltése az eredménnyel
-            ui->productsList->clear();
-            ui->productDetails->clear();
-
-            if(parserOutput.size() > 0)
-            {
-                for(size_t i=0; i<parserOutput.size(); ++i)
-                {
-                    QListWidgetItem *item = new QListWidgetItem();
-                    item->setText(parserOutput[i].name);
-                    item->setData(Qt::UserRole, QVariant(int(i)));
-                    ui->productsList->addItem(item);
-                }
-            }
-            else
-            {
-                QMessageBox messageBox;
-                messageBox.critical(0,"Hiba","A kép nem nyugtát tartalmaz!");
-                messageBox.setFixedSize(500,200);
-            }
-
-            //A nyugta képének megjelenítése
-            QPixmap pixmap(fileName);
-            ui->note->setPixmap(pixmap);
-            ui->note->setMask(pixmap.mask());
-
-            ui->note->show();
+            qDebug() << timer.elapsed();
         }
         else
         {
+            qDebug() << timer.elapsed();
             QMessageBox messageBox;
-            messageBox.critical(0,"Hiba","A kép szövege nem olvasható!");
+            messageBox.critical(0,"Hiba","A kép nem nyugtát tartalmaz!");
             messageBox.setFixedSize(500,200);
-        }
+        }         
     }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","A kép szövege nem olvasható!");
+        messageBox.setFixedSize(500,200);
+    }
+
 }
 
 /* Terméksor egy elemére kattintottak */
@@ -508,5 +540,7 @@ void MainWindow::on_actionQuit_triggered()
 /* Destruktor */
 MainWindow::~MainWindow()
 {
+    delete api;
+    delete ocrProgress;
     delete ui;
 }
