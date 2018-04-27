@@ -530,6 +530,12 @@ void MainWindow::on_actionEditDict_triggered()
     dialog->open();
 }
 
+/* Súgó megnyitása */
+void MainWindow::on_actionOpenHelp_triggered()
+{
+   HelpDialog *hd = new HelpDialog(this);
+   hd->open();
+}
 
 /* Kilépés */
 void MainWindow::on_actionQuit_triggered()
@@ -544,3 +550,5 @@ MainWindow::~MainWindow()
     delete ocrProgress;
     delete ui;
 }
+
+

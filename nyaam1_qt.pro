@@ -32,7 +32,8 @@ HEADERS  += mainwindow.h \
     defines.h \
     abbreviation.h \
     searchdialog.h \
-    editdictdialog.h
+    editdictdialog.h \
+    helpdialog.h
 
 FORMS    += mainwindow.ui
 CONFIG += c++11

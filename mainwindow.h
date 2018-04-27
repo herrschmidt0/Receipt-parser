@@ -27,6 +27,7 @@
 #include "parser.h"
 #include "searchdialog.h"
 #include "editdictdialog.h"
+#include "helpdialog.h"
 
 namespace Ui {
 class MainWindow;
@@ -76,6 +77,8 @@ private slots:
     void on_actionSaveAllOnlineResults_triggered();
 
     void on_actionAddToDictionary_triggered();
+
+    void on_actionOpenHelp_triggered();
 
 public slots:
     void handleOCRFinished();

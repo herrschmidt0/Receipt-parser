@@ -153,6 +153,8 @@
      <string>Fájl</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionOpenHelp"/>
+    <addaction name="separator"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuEszk_z_k">
@@ -219,6 +221,11 @@
   <action name="actionAddToDictionary">
    <property name="text">
     <string>Ez a javaslat helyes! Hozzáadás a szótárhoz</string>
+   </property>
+  </action>
+  <action name="actionOpenHelp">
+   <property name="text">
+    <string>Súgó</string>
    </property>
   </action>
  </widget>
