@@ -125,6 +125,8 @@ private:
             else{
                 addNode(conflicted_node,word);
             }
+
+            delete conflicted_node;
         }
 
     }

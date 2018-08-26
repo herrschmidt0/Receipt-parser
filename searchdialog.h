@@ -37,6 +37,13 @@ public:
         connect(this, SIGNAL(executeSearch(QString)), parent, SLOT(onExecuteSearch(QString)));
     }
 
+    ~SearchDialog()
+    {
+        delete query;
+        delete queryLabel;
+        delete sendButton;
+    }
+
 private:
 
     QLineEdit *query;
@@ -52,6 +59,7 @@ private:
 
  signals:
     void executeSearch(QString query);
+
 
 };
 

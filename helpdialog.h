@@ -24,7 +24,7 @@ private:
         "A keresési találatok a jobb-alsó ablakban listázódnak.",
         "Az Eszközök->Online keresés mentése gombokkal a keresés eredményeit lehet fájlba kimenteni.",
         "Hasonlóan, az Eszközök->Kép mentése gombra kattintva a keresési találat képét lehet elmenteni.",
-        "Az Eszközök->Szótárak szerkesztése gombon keresztül a helyességellenőrzés és rövidítéskibontás szótárai lehet szerkeszteni.",
+        "Az Eszközök->Szótárak szerkesztése gombon keresztül a helyességellenőrzés és rövidítéskibontás szótárait lehet szerkeszteni.",
         "'Ez a javaslat helyes! Hozzáadás a szótárhoz' gomb a kiválasztott, rövidítéskibontás javaslataként kapott szót megtanulja, \n lementi a szótárba."
     };
 

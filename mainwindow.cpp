@@ -66,7 +66,7 @@ void MainWindow::on_actionOpen_triggered()
 
     if(!fileName.isEmpty())
     {
-        timer.start();
+        //timer.start();
 
         ocrProgress = new QProgressDialog("Nyugtabeolvasás folyamatban...", "Cancel", 0, 100);
         ocrProgress->show();
@@ -85,10 +85,16 @@ void MainWindow::on_actionOpen_triggered()
     }
 }
 
+vector<Product> runParser(vector<QString> input, Parser *parser)
+{
+    vector<Product> output;
+    parser->executeParser(input, output);
+    return output;
+}
+
 void MainWindow::handleOCRFinished()
 {
-    ocrProgress->setValue(100);
-    ocrProgress->deleteLater();
+    ocrProgress->setValue(75);
 
     QString outQString = tessFuture.result();
 
@@ -105,32 +111,12 @@ void MainWindow::handleOCRFinished()
             parserInput.push_back(ss.readLine());
         }
 
-        //Parser futtatása
-        parserOutput.clear();
-        parser.executeParser(parserInput, parserOutput);
+        //Parser futtatása külön szálon
+        parserFuture = QtConcurrent::run(runParser, parserInput, &parser);
+        QFutureWatcher<vector<Product>> *watcher = new QFutureWatcher<vector<Product>>();
+        watcher->setFuture(parserFuture);
 
-        //Ablak feltöltése az eredménnyel
-        ui->productsList->clear();
-        ui->productDetails->clear();
-
-        if(parserOutput.size() > 0)
-        {
-            for(size_t i=0; i<parserOutput.size(); ++i)
-            {
-                QListWidgetItem *item = new QListWidgetItem();
-                item->setText(parserOutput[i].name);
-                item->setData(Qt::UserRole, QVariant(int(i)));
-                ui->productsList->addItem(item);
-            }
-            qDebug() << timer.elapsed();
-        }
-        else
-        {
-            qDebug() << timer.elapsed();
-            QMessageBox messageBox;
-            messageBox.critical(0,"Hiba","A kép nem nyugtát tartalmaz!");
-            messageBox.setFixedSize(500,200);
-        }         
+        connect(watcher, SIGNAL(finished()), this, SLOT(handleParserFinished()));
     }
     else
     {
@@ -139,6 +125,36 @@ void MainWindow::handleOCRFinished()
         messageBox.setFixedSize(500,200);
     }
 
+}
+
+
+void MainWindow::handleParserFinished()
+{
+    //Ablak feltöltése az eredménnyel
+    ui->productsList->clear();
+    ui->productDetails->clear();
+
+    parserOutput = parserFuture.result();
+
+    if(parserOutput.size() > 0)
+    {
+        for(size_t i=0; i<parserOutput.size(); ++i)
+        {
+            QListWidgetItem *item = new QListWidgetItem();
+            item->setText(parserOutput[i].name);
+            item->setData(Qt::UserRole, QVariant(int(i)));
+            ui->productsList->addItem(item);
+        }
+    }
+    else
+    {
+        QMessageBox messageBox;
+        messageBox.critical(0,"Hiba","A kép nem nyugtát tartalmaz!");
+        messageBox.setFixedSize(500,200);
+    }
+
+    ocrProgress->setValue(100);
+    ocrProgress->deleteLater();
 }
 
 /* Terméksor egy elemére kattintottak */

@@ -86,13 +86,8 @@ public:
 
                    if(dictionary[i].Short == input.mid(i_pos, pos-i_pos))
                    {
-                       qDebug()<<dictionary[i].Short
-                       << input.mid(i_pos, pos-i_pos);
-
-                       /*
-                      input.erase(i_pos, pos-i_pos+1);
-                      input.insert(i_pos, dictionary[i].Long.toStdString());
-                      pos = i_pos + dictionary[i].Long.length() + 1;*/
+                       //qDebug()<<dictionary[i].Short
+                       //<< input.mid(i_pos, pos-i_pos);
 
                       product.abrevs.push_back(DictElem(dictionary[i].Short, dictionary[i].Long));
                       foundInDictionary = true;

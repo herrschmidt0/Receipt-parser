@@ -48,6 +48,7 @@ private:
     QFuture<QString> tessFuture;
     QProgressDialog *ocrProgress;
 
+    QFuture<vector<Product>> parserFuture;
     Parser parser;
 
     //Listák adatai
@@ -55,7 +56,7 @@ private:
     vector<Product> parserOutput;
     vector<QJsonValue> recommendations;
 
-    QElapsedTimer timer;
+    //QElapsedTimer timer;
 
 private slots:
     void replyFinished(QNetworkReply*);
@@ -82,6 +83,8 @@ private slots:
 
 public slots:
     void handleOCRFinished();
+    void handleParserFinished();
+
     void onExecuteSearch(QString query);
 };
 

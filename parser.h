@@ -45,7 +45,7 @@ public:
 
                 Product product;
 
-                //qDebug()<<input[i];
+                qDebug()<<input[i];
 
                 int tc_pos = isProductLine(input[i], product);
 
@@ -148,8 +148,9 @@ private:
         // TERMEKNEV AR X00 - formátumú
         else{
 
-            int lastSpacePos = line.indexOf(' ');
+            int lastSpacePos = line.lastIndexOf(' ');
             line = line.mid(0, lastSpacePos);
+            //qDebug() << line;
         }
 
         int pricePos = line.length() - 1;
